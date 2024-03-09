@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"strings"
 
 	"github.com/ava-labs/avalanchego/ids"
@@ -13,7 +14,6 @@ import (
 	"github.com/ava-labs/hypersdk/consts"
 	"github.com/ava-labs/hypersdk/state"
 	"github.com/ava-labs/hypersdk/utils"
-	rpc "github.com/gorilla/rpc/v2/json2"
 	mconsts "github.com/sausaging/hyper-pvzk/consts"
 	"github.com/sausaging/hyper-pvzk/requester"
 	"github.com/sausaging/hyper-pvzk/storage"
@@ -135,9 +135,12 @@ func (s *SP1) Execute(
 	if err != nil {
 		return false, 7000, utils.ErrBytes(fmt.Errorf("%s: can't do request", err)), nil, nil
 	}
-
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return false, 8000, utils.ErrBytes(fmt.Errorf("%s: can't decode client response", err)), nil, nil
+	}
 	reply := new(SP1ReplyArgs)
-	err = rpc.DecodeClientResponse(resp.Body, reply)
+	err = json.Unmarshal(body, reply)
 	if err != nil {
 		return false, 8000, utils.ErrBytes(fmt.Errorf("%s: can't decode client response", err)), nil, nil
 	}

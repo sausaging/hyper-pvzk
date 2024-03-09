@@ -2,12 +2,13 @@ package requester
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 
 	"github.com/ava-labs/hypersdk/chain"
-	rpc "github.com/gorilla/rpc/v2/json2"
 )
 
 type EndpointRequester struct {
@@ -59,10 +60,14 @@ func Ping(client *EndpointRequester) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("%s: can't do request", err)
 	}
-	reply := new(PingReply)
-	err = rpc.DecodeClientResponse(resp.Body, reply)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return false, fmt.Errorf("%s: can't decode client response", err)
+	}
+	reply := new(PingReply)
+	err = json.Unmarshal(body, &reply)
+	if err != nil {
+		return false, fmt.Errorf("%s: can't unmarshal json", err)
 	}
 	return reply.Success, nil
 }

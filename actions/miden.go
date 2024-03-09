@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"strings"
 
 	"github.com/ava-labs/avalanchego/ids"
@@ -13,7 +14,6 @@ import (
 	"github.com/ava-labs/hypersdk/consts"
 	"github.com/ava-labs/hypersdk/state"
 	"github.com/ava-labs/hypersdk/utils"
-	rpc "github.com/gorilla/rpc/v2/json2"
 	mconsts "github.com/sausaging/hyper-pvzk/consts"
 	"github.com/sausaging/hyper-pvzk/requester"
 	"github.com/sausaging/hyper-pvzk/storage"
@@ -136,11 +136,14 @@ func (m *Miden) Execute(
 	if err != nil {
 		return false, 5000, utils.ErrBytes(fmt.Errorf("%s: can't do request", err)), nil, nil
 	}
-
-	reply := new(MidenReplyArgs)
-	err = rpc.DecodeClientResponse(resp.Body, reply)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return false, 6000, utils.ErrBytes(fmt.Errorf("%s: can't decode client response", err)), nil, nil
+	}
+	reply := new(MidenReplyArgs)
+	err = json.Unmarshal(body, &reply)
+	if err != nil {
+		return false, 6000, utils.ErrBytes(fmt.Errorf("%s: can't unmarshal json", err)), nil, nil
 	}
 
 	return reply.IsValid, 6000, nil, nil, nil
