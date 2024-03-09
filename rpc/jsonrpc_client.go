@@ -16,6 +16,7 @@ import (
 	"github.com/sausaging/hyper-pvzk/consts"
 	"github.com/sausaging/hyper-pvzk/genesis"
 	_ "github.com/sausaging/hyper-pvzk/registry" // ensure registry populated
+	req "github.com/sausaging/hyper-pvzk/requester"
 	"github.com/sausaging/hyper-pvzk/storage"
 )
 
@@ -138,7 +139,8 @@ func (p *Parser) ChainID() ids.ID {
 }
 
 func (p *Parser) Rules(t int64) chain.Rules {
-	return p.genesis.Rules(t, p.networkID, p.chainID)
+	r := req.New("")
+	return p.genesis.Rules(t, p.networkID, p.chainID, r)
 }
 
 func (*Parser) Registry() (chain.ActionRegistry, chain.AuthRegistry) {

@@ -23,10 +23,11 @@ MODE=${MODE:-run}
 AGO_LOGLEVEL=${AGO_LOGLEVEL:-info}
 LOGLEVEL=${LOGLEVEL:-info}
 STATESYNC_DELAY=${STATESYNC_DELAY:-0}
-MIN_BLOCK_GAP=${MIN_BLOCK_GAP:-100}
+MIN_BLOCK_GAP=${MIN_BLOCK_GAP:-30_000}
 STORE_TXS=${STORE_TXS:-false}
-UNLIMITED_USAGE=${UNLIMITED_USAGE:-false}
+UNLIMITED_USAGE=${UNLIMITED_USAGE:-true}
 ADDRESS=${ADDRESS:-morpheus1qrzvk4zlwj9zsacqgtufx7zvapd3quufqpxk5rsdd4633m4wz2fdjk97rwu}
+HUB_PORT=${HUB_PORT:-http://127.0.0.1:8080}
 if [[ ${MODE} != "run" ]]; then
   LOGLEVEL=debug
   STATESYNC_DELAY=100000000 # 100ms
@@ -114,6 +115,9 @@ find "${TMPDIR}"/avalanchego-"${VERSION}"
 
 ############################
 
+rm -rf "${TMPDIR}"/sausage
+mkdir -p "${TMPDIR}"/sausage
+
 # Always create allocations (linter doesn't like tab)
 echo "creating allocations file"
 cat <<EOF > "${TMPDIR}"/allocations.json
@@ -151,13 +155,14 @@ cat <<EOF > "${TMPDIR}"/morpheusvm.config
   "mempoolExemptSponsors":["${ADDRESS}"],
   "authVerificationCores": 2,
   "rootGenerationCores": 2,
-  "transactionExecutionCores": 2,
+  "transactionExecutionCores": 2, 
   "verifyAuth":true,
   "storeTransactions": ${STORE_TXS},
   "streamingBacklogSize": 10000000,
   "logLevel": "${LOGLEVEL}",
   "continuousProfilerDir":"${TMPDIR}/morpheusvm-e2e-profiles/*",
-  "stateSyncServerDelay": ${STATESYNC_DELAY}
+  "stateSyncServerDelay": ${STATESYNC_DELAY},
+  "hubPorturi": "${HUB_PORT}"
 }
 EOF
 mkdir -p "${TMPDIR}"/morpheusvm-e2e-profiles

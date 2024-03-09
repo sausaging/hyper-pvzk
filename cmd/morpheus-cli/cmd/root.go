@@ -54,6 +54,7 @@ func init() {
 		actionCmd,
 		spamCmd,
 		prometheusCmd,
+		testingCmd,
 	)
 	rootCmd.PersistentFlags().StringVar(
 		&dbPath,
@@ -145,7 +146,11 @@ func init() {
 	actionCmd.AddCommand(
 		transferCmd,
 	)
-
+	testingCmd.AddCommand(
+		registerCmd,
+		deployCmd,
+		verifyCmd,
+	)
 	// spam
 	runSpamCmd.PersistentFlags().BoolVar(
 		&randomRecipient,

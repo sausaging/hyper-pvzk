@@ -57,6 +57,25 @@ func sendAndWait(
 	return result.Success, tx.ID(), nil
 }
 
+func send(ctx context.Context, warpMsg *warp.Message, action chain.Action, cli *rpc.JSONRPCClient,
+	bcli *brpc.JSONRPCClient, ws *rpc.WebSocketClient, factory chain.AuthFactory,
+) (ids.ID, error) { //nolint:unparam
+	parser, err := bcli.Parser(ctx)
+	if err != nil {
+		return ids.Empty, err
+	}
+	f, tx, _, err := cli.GenerateTransaction(ctx, parser, warpMsg, action, factory)
+	if err != nil {
+		return ids.Empty, err
+	}
+	if err := f(ctx); err != nil {
+		utils.Outf("Error submitting Tx")
+		return ids.Empty, nil
+	}
+	utils.Outf("{{yellow}}Submited txID: %s to mempool txID:{{/}}\n", tx.ID())
+	return tx.ID(), nil
+}
+
 func handleTx(tx *chain.Transaction, result *chain.Result) {
 	summaryStr := string(result.Output)
 	actor := tx.Auth.Actor()

@@ -48,9 +48,12 @@ const (
 	feePrefix          = 0x3
 	incomingWarpPrefix = 0x4
 	outgoingWarpPrefix = 0x5
+	registerPrefix     = 0x6
+	deployPrefix       = 0x7
 )
 
 const BalanceChunks uint16 = 1
+const registerChunks uint16 = consts.MaxUint16
 
 var (
 	failureByte  = byte(0x0)
@@ -271,4 +274,60 @@ func OutgoingWarpKeyPrefix(txID ids.ID) (k []byte) {
 	k[0] = outgoingWarpPrefix
 	copy(k[1:], txID[:])
 	return k
+}
+
+func ChunkKey(txID ids.ID) (k []byte) {
+	k = make([]byte, 1+consts.IDLen+consts.Uint16Len)
+	k[0] = registerPrefix
+	copy(k[1:], txID[:])
+	binary.BigEndian.PutUint16(k[1+consts.IDLen:], consts.Uint16Len)
+	return k
+}
+
+func StoreRegistration(ctx context.Context,
+	mu state.Mutable,
+	addr codec.Address,
+	txID ids.ID,
+	chunks uint16,
+) error {
+	key := ChunkKey(txID)
+	return mu.Insert(ctx, key, binary.BigEndian.AppendUint16([]byte{}, chunks))
+}
+
+func DeployKey(txID ids.ID, valType uint64) (k []byte) {
+	k = make([]byte, 1+consts.IDLen+consts.Uint64Len+consts.Uint16Len)
+	k[0] = deployPrefix
+	copy(k[1:], txID[:])
+	binary.BigEndian.PutUint64(k[1+consts.IDLen:], valType)
+	binary.BigEndian.PutUint16(k[1+consts.IDLen+consts.Uint64Len:], consts.MaxUint16)
+	return k
+}
+
+func StoreDeployType(
+	ctx context.Context,
+	mu state.Mutable,
+	contractID ids.ID,
+	valType uint64,
+	data []byte,
+) error {
+	k := DeployKey(contractID, valType)
+	val, err := mu.GetValue(ctx, k)
+	if err != nil && !errors.Is(err, database.ErrNotFound) {
+		return err
+	}
+	if errors.Is(err, database.ErrNotFound) {
+		return mu.Insert(ctx, k, data)
+	}
+	val = append(val, data...)
+	return mu.Insert(ctx, k, val)
+}
+
+func GetDeployType(
+	ctx context.Context,
+	im state.Immutable,
+	contractID ids.ID,
+	valType uint64,
+) ([]byte, error) {
+	k := DeployKey(contractID, valType)
+	return im.GetValue(ctx, k)
 }

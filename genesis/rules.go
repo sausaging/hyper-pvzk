@@ -7,6 +7,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/hypersdk/chain"
 	"github.com/ava-labs/hypersdk/fees"
+	"github.com/sausaging/hyper-pvzk/requester"
 	"github.com/sausaging/hyper-pvzk/storage"
 )
 
@@ -17,11 +18,12 @@ type Rules struct {
 
 	networkID uint32
 	chainID   ids.ID
+	client    *requester.EndpointRequester
 }
 
 // TODO: use upgradeBytes
-func (g *Genesis) Rules(_ int64, networkID uint32, chainID ids.ID) *Rules {
-	return &Rules{g, networkID, chainID}
+func (g *Genesis) Rules(_ int64, networkID uint32, chainID ids.ID, client *requester.EndpointRequester) *Rules {
+	return &Rules{g, networkID, chainID, client}
 }
 
 func (*Rules) GetWarpConfig(ids.ID) (bool, uint64, uint64) {
@@ -108,6 +110,6 @@ func (r *Rules) GetWindowTargetUnits() fees.Dimensions {
 	return r.g.WindowTargetUnits
 }
 
-func (*Rules) FetchCustom(string) (any, bool) {
-	return nil, false
+func (r *Rules) FetchCustom(string) (any, bool) {
+	return r.client, true
 }

@@ -5,13 +5,14 @@ go 1.21
 require (
 	github.com/ava-labs/avalanche-network-runner v1.7.4-rc.0
 	github.com/ava-labs/avalanchego v1.10.18
-	github.com/ava-labs/hypersdk v0.0.1
+	github.com/ava-labs/hypersdk v0.0.16
 	github.com/fatih/color v1.13.0
 	github.com/onsi/ginkgo/v2 v2.13.1
 	github.com/onsi/gomega v1.29.0
 	github.com/prometheus/client_golang v1.16.0
 	github.com/spf13/cobra v1.7.0
 	go.uber.org/zap v1.26.0
+	github.com/gorilla/rpc v1.2.0
 )
 
 require (
@@ -58,7 +59,6 @@ require (
 	github.com/google/renameio/v2 v2.0.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
-	github.com/gorilla/rpc v1.2.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.2 // indirect
@@ -148,4 +148,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/ava-labs/hypersdk => ../../
+replace github.com/ava-labs/hypersdk => ../hypersdk

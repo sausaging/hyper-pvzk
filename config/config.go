@@ -16,8 +16,8 @@ import (
 	"github.com/ava-labs/hypersdk/config"
 	"github.com/ava-labs/hypersdk/trace"
 	"github.com/ava-labs/hypersdk/vm"
-
 	"github.com/sausaging/hyper-pvzk/consts"
+	"github.com/sausaging/hyper-pvzk/requester"
 	"github.com/sausaging/hyper-pvzk/version"
 )
 
@@ -57,13 +57,14 @@ type Config struct {
 	StoreTransactions bool          `json:"storeTransactions"`
 	TestMode          bool          `json:"testMode"` // makes gossip/building manual
 	LogLevel          logging.Level `json:"logLevel"`
-
+	HubPorturi        string        `json:"hubPorturi"`
 	// State Sync
 	StateSyncServerDelay time.Duration `json:"stateSyncServerDelay"` // for testing
 
 	loaded               bool
 	nodeID               ids.NodeID
 	parsedExemptSponsors []codec.Address
+	Client               *requester.EndpointRequester
 }
 
 func New(nodeID ids.NodeID, b []byte) (*Config, error) {
@@ -86,6 +87,17 @@ func New(nodeID ids.NodeID, b []byte) (*Config, error) {
 		}
 		c.parsedExemptSponsors[i] = p
 	}
+
+	if len(c.HubPorturi) == 0 {
+		return nil, fmt.Errorf("hub port not provided")
+	}
+
+	c.Client = requester.New(c.HubPorturi)
+	success, err := requester.Ping(c.Client)
+	if err != nil || !success /*lol*/ {
+		return nil, fmt.Errorf("%s: can't Ping Server", err)
+	}
+
 	return c, nil
 }
 
