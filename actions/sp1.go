@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"strings"
+	"strconv"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/platformvm/warp"
@@ -104,8 +104,8 @@ func (s *SP1) Execute(
 		return false, 2000, utils.ErrBytes(fmt.Errorf("%s: can't get proof at type %d from state", err, valType)), nil, nil
 	}
 	// store files to disk
-	elfFilePath := requester.BASEFILEPATH + strings.ToValidUTF8("elf", string(storage.DeployKey(imageID, elfValType)))
-	proofFilePath := requester.BASEFILEPATH + strings.ToValidUTF8("proof", string(storage.DeployKey(imageID, valType)))
+	elfFilePath := requester.BASEFILEPATH + imageID.String() + strconv.Itoa(int(elfValType)) + ".txt"
+	proofFilePath := requester.BASEFILEPATH + imageID.String() + strconv.Itoa(int(valType)) + ".json"
 
 	if err := utils.SaveBytes(elfFilePath, elfBytes); err != nil {
 		return false, 3000, utils.ErrBytes(fmt.Errorf("%s: can't write elf to disk", err)), nil, nil

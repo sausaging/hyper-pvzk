@@ -79,7 +79,7 @@ var deployCmd = &cobra.Command{
 				ProofvalType: uint64(valType),
 				Data:         code[i:end],
 			}, cli, bcli, ws, factory)
-			if i%10 == 0 {
+			if (i/chunkSize)%10 == 0 && i != 0 {
 				time.Sleep(30 * time.Second)
 			}
 		}

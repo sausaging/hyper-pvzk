@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"strings"
+	"strconv"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/platformvm/warp"
@@ -108,7 +108,7 @@ func (m *Miden) Execute(
 		return false, 1000, utils.ErrBytes(fmt.Errorf("%s: can't get proof at type %d from state", err, proofValType)), nil, nil
 	}
 
-	proofFilePath := requester.BASEFILEPATH + strings.ToValidUTF8("proof", string(storage.DeployKey(imageID, proofValType)))
+	proofFilePath := requester.BASEFILEPATH + imageID.String() + strconv.Itoa(int(proofValType)) + ".json"
 	if err := utils.SaveBytes(proofFilePath, proofJsonBytes); err != nil {
 		return false, 2000, utils.ErrBytes(fmt.Errorf("%s: can't write proof to disk", err)), nil, nil
 	}
