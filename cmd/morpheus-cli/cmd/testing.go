@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"io/ioutil"
+	"time"
 
 	"github.com/ava-labs/hypersdk/chain"
 	"github.com/ava-labs/hypersdk/consts"
@@ -78,6 +79,9 @@ var deployCmd = &cobra.Command{
 				ProofvalType: uint64(valType),
 				Data:         code[i:end],
 			}, cli, bcli, ws, factory)
+			if i%10 == 0 {
+				time.Sleep(30 * time.Second)
+			}
 		}
 		return err
 	},
