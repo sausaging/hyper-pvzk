@@ -276,11 +276,11 @@ func OutgoingWarpKeyPrefix(txID ids.ID) (k []byte) {
 	return k
 }
 
-func ChunkKey(txID ids.ID) (k []byte) {
+func ChunkKey(txID ids.ID, maxChunks uint16) (k []byte) {
 	k = make([]byte, 1+consts.IDLen+consts.Uint16Len)
 	k[0] = registerPrefix
 	copy(k[1:], txID[:])
-	binary.BigEndian.PutUint16(k[1+consts.IDLen:], consts.Uint16Len)
+	binary.BigEndian.PutUint16(k[1+consts.IDLen:], maxChunks)
 	return k
 }
 
@@ -290,7 +290,7 @@ func StoreRegistration(ctx context.Context,
 	txID ids.ID,
 	chunks uint16,
 ) error {
-	key := ChunkKey(txID)
+	key := ChunkKey(txID, chunks)
 	return mu.Insert(ctx, key, binary.BigEndian.AppendUint16([]byte{}, chunks))
 }
 
