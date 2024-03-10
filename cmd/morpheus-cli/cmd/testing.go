@@ -128,7 +128,7 @@ var deployCmd = &cobra.Command{
 			}, txID)
 
 			utils.Outf("{{yellow}}sent chunk %d{{/}}\n", i)
-			if i%5 == 0 && i != 0 {
+			if i%25 == 0 && i != 0 {
 				time.Sleep(15 * time.Second)
 			}
 
@@ -168,28 +168,33 @@ var retryDeployCmd = &cobra.Command{
 			}
 
 			if contains && success {
-				// delete(jsonData, txID.String())
 				arr = append(arr, txID)
 			} else {
-				// @todo send the tx again
 
-				utils.Outf("{{yellow}}retrying tx:{{/}} %s, contains: %t, success: %t\n, chunk: %d", txID, contains, success, txDa.ChunkIndex)
+				utils.Outf("{{yellow}}retrying tx:{{/}} %s, contains: %t, success: %t\n, {{pink}}chunk: %d{{/}}\n", txID, contains, success, txDa.ChunkIndex)
 				txID2, _ := send(ctx, nil, &actions.Deploy{
 					ImageID:      txDa.ImageID,
 					ProofvalType: txDa.ProofValType,
 					ChunkIndex:   txDa.ChunkIndex,
 					Data:         txDa.Data,
 				}, cli, bcli, ws, factory)
-				// if err != nil {
-				// 	return err
-				// }
-				// delete(jsonData, txID.String())
 				arr = append(arr, txID)
 				jsonData[txID2.String()] = txDa
 			}
 		}
 		for _, i := range arr {
 			delete(jsonData, i.String())
+		}
+
+		newData, err := json.MarshalIndent(jsonData, "", "  ")
+		if err != nil {
+			utils.Outf("{{red}}error marshalling data: %s{{/}}\n", err)
+		}
+
+		// Write the updated JSON data back to the file
+		err = os.WriteFile(fileName, newData, 0644)
+		if err != nil {
+			utils.Outf("{{red}}error writing to file: %s{{/}}\n", err)
 		}
 		return err
 	},
