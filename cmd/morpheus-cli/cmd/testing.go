@@ -105,17 +105,18 @@ var deployCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		totalChunks := len(code) / chunkSize
-		for i := 0; i <= totalChunks; i++ {
-			end := (i + 1) * chunkSize
+		totalChunks := (len(code) + chunkSize - 1) / chunkSize // Include the last chunk
+		for chunkIndex := 0; chunkIndex < totalChunks; chunkIndex++ {
+			start := uint64(chunkIndex) * uint64(chunkSize)
+			end := (chunkIndex + 1) * chunkSize
 			if end > len(code) {
 				end = len(code)
 			}
 			txID, err := send(ctx, nil, &actions.Deploy{
 				ImageID:      imageID,
 				ProofvalType: uint64(valType),
-				ChunkIndex:   uint64(i),
-				Data:         code[i*chunkSize : end],
+				Data:         code[start:end],
+				ChunkIndex:   uint64(chunkIndex + 1), // figure out why parser fails when chunkIndex is 0?
 			}, cli, bcli, ws, factory)
 			if err != nil {
 				return err
@@ -123,16 +124,16 @@ var deployCmd = &cobra.Command{
 			WriteToJson(txData{
 				ImageID:      imageID,
 				ProofValType: uint64(valType),
-				ChunkIndex:   uint64(i),
-				Data:         code[i*chunkSize : end],
+				ChunkIndex:   uint64(chunkIndex),
+				Data:         code[start:end],
 			}, txID)
 
-			utils.Outf("{{yellow}}sent chunk %d{{/}}\n", i)
-			if i%25 == 0 && i != 0 {
+			utils.Outf("{{yellow}} sent chunk %d{{/}}\n{{green}} offset: %d, file size: %d{{/}}\n", chunkIndex, end, len(code))
+			if chunkIndex%5 == 0 && chunkIndex != 0 {
 				time.Sleep(15 * time.Second)
 			}
-
 		}
+
 		return err
 	},
 }
@@ -171,11 +172,11 @@ var retryDeployCmd = &cobra.Command{
 				arr = append(arr, txID)
 			} else {
 
-				utils.Outf("{{yellow}}retrying tx:{{/}} %s, contains: %t, success: %t\n, {{pink}}chunk: %d{{/}}\n", txID, contains, success, txDa.ChunkIndex)
+				utils.Outf("{{yellow}}retrying tx:{{/}} %s, contains: %t, success: %t, {{cyan}}chunk: %d{{/}}\n", txID, contains, success, txDa.ChunkIndex)
 				txID2, _ := send(ctx, nil, &actions.Deploy{
 					ImageID:      txDa.ImageID,
 					ProofvalType: txDa.ProofValType,
-					ChunkIndex:   txDa.ChunkIndex,
+					ChunkIndex:   txDa.ChunkIndex + 1,
 					Data:         txDa.Data,
 				}, cli, bcli, ws, factory)
 				arr = append(arr, txID)

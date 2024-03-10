@@ -85,6 +85,9 @@ func handleTx(tx *chain.Transaction, result *chain.Result) {
 		switch action := tx.Action.(type) { //nolint:gocritic
 		case *actions.Transfer:
 			summaryStr = fmt.Sprintf("%s %s -> %s", utils.FormatBalance(action.Value, consts.Decimals), consts.Symbol, codec.MustAddressBech32(consts.HRP, action.To))
+		case *actions.Deploy:
+			summaryStr =
+				fmt.Sprintf("added chunk with index: %d", action.ChunkIndex)
 		}
 	}
 	utils.Outf(

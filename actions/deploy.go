@@ -48,12 +48,13 @@ func (*Deploy) MaxComputeUnits(chain.Rules) uint64 {
 }
 
 func (d Deploy) Size() int {
-	return consts.IDLen + consts.Uint64Len + len(d.Data)
+	return consts.IDLen + 2*consts.Uint64Len + len(d.Data)
 }
 
 func (d *Deploy) Marshal(p *codec.Packer) {
 	p.PackID(d.ImageID)
 	p.PackUint64(d.ProofvalType)
+	p.PackUint64(d.ChunkIndex)
 	p.PackBytes(d.Data)
 }
 
@@ -61,6 +62,7 @@ func UnmarshalDeploy(p *codec.Packer, _ *warp.Message) (chain.Action, error) {
 	var deploy Deploy
 	p.UnpackID(true, &deploy.ImageID)
 	deploy.ProofvalType = p.UnpackUint64(true)
+	deploy.ChunkIndex = p.UnpackUint64(true)
 	p.UnpackBytes(consts.MaxInt, true, &deploy.Data)
 	return &deploy, nil
 }

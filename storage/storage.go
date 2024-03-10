@@ -338,14 +338,15 @@ func StoreDeployType(
 	if err != nil {
 		return err
 	}
-	var newVal []byte
+	chunkIndex = chunkIndex - 1
 	start := uint64(chunkIndex) * uint64(chunkSize)
-	if start+uint64(chunkSize) > uint64(len(val)) { // end case
-		newVal = append(val[:start], data...) // data len not matches the free end limit, throws an error
-	} else {
-		newVal = append(val[:start], append(data, val[start+uint64(chunkSize):]...)...)
+	totalChunks := (uint64(len(val)) + uint64(chunkSize) - 1) / uint64(chunkSize) // Include the last chunk
+
+	if uint64(chunkIndex) > totalChunks {
+		return fmt.Errorf("chunk index out of range")
 	}
-	return mu.Insert(ctx, k, newVal)
+	val = append(val[:start], data...)
+	return mu.Insert(ctx, k, val)
 }
 
 func InitiateDeployType(
