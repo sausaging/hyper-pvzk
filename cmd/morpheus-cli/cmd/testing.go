@@ -169,16 +169,17 @@ var retryDeployCmd = &cobra.Command{
 				delete(jsonData, txID.String())
 			} else {
 				// @todo send the tx again
-				utils.Outf("{{yellow}}retrying tx:{{/}} %s\n", txID)
-				txID2, err := send(ctx, nil, &actions.Deploy{
+
+				utils.Outf("{{yellow}}retrying tx:{{/}} %s, contains: %t, success: %t\n, chunk: %d", txID, contains, success, txDa.ChunkIndex)
+				txID2, _ := send(ctx, nil, &actions.Deploy{
 					ImageID:      txDa.ImageID,
 					ProofvalType: txDa.ProofValType,
 					ChunkIndex:   txDa.ChunkIndex,
 					Data:         txDa.Data,
 				}, cli, bcli, ws, factory)
-				if err != nil {
-					return err
-				}
+				// if err != nil {
+				// 	return err
+				// }
 				delete(jsonData, txID.String())
 				jsonData[txID2.String()] = txDa
 			}
