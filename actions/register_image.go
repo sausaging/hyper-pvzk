@@ -27,7 +27,7 @@ func (*Register) GetTypeID() uint8 {
 
 func (r *Register) StateKeys(actor codec.Address, txID ids.ID) state.Keys {
 	return state.Keys{
-		string(storage.ChunkKey(txID, uint16(r.MaxChunks))): state.Read | state.Write,
+		string(storage.ChunkKey(txID, uint16(r.MaxChunks))): state.All,
 	}
 }
 

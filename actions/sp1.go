@@ -43,8 +43,8 @@ func (*SP1) GetTypeID() uint8 {
 
 func (s *SP1) StateKeys(actor codec.Address, txID ids.ID) state.Keys {
 	return state.Keys{
-		string(storage.DeployKey(s.ImageID, elfValType)):     state.Read | state.Write, // ELF key
-		string(storage.DeployKey(s.ImageID, s.ProofValType)): state.Read | state.Write, // Proof key
+		string(storage.DeployKey(s.ImageID, elfValType)):     state.All, // ELF key
+		string(storage.DeployKey(s.ImageID, s.ProofValType)): state.All, // Proof key
 	}
 }
 

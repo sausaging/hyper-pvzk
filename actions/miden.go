@@ -49,7 +49,7 @@ func (*Miden) GetTypeID() uint8 {
 
 func (m *Miden) StateKeys(actor codec.Address, txID ids.ID) state.Keys {
 	return state.Keys{
-		string(storage.DeployKey(m.ImageID, m.ProofValType)): state.Read | state.Write,
+		string(storage.DeployKey(m.ImageID, m.ProofValType)): state.All,
 	}
 }
 

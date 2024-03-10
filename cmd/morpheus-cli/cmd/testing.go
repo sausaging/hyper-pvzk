@@ -69,7 +69,7 @@ var deployCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		chunkSize := 100 * 1024
+		chunkSize := 10 * 1024
 		for i := 0; i < len(code); i += chunkSize {
 			end := i + chunkSize
 			if end > len(code) {

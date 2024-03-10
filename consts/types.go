@@ -10,7 +10,7 @@ const (
 	SP1ID      uint8 = 2
 	MidenID    uint8 = 3
 	DeployID   uint8 = 4
-	RiscZeroID uint8 = 5
+	RiscZeroID uint8 = 8
 	// Auth TypeIDs
 	ED25519ID   uint8 = 0
 	SECP256R1ID uint8 = 1

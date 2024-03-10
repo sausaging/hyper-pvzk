@@ -44,7 +44,7 @@ func (*RiscZero) GetTypeID() uint8 {
 
 func (r *RiscZero) StateKeys(actor codec.Address, txID ids.ID) state.Keys {
 	return state.Keys{
-		string(storage.DeployKey(r.ImageID, r.ProofValType)): state.Read | state.Write,
+		string(storage.DeployKey(r.ImageID, r.ProofValType)): state.All,
 	}
 }
 

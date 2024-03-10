@@ -93,10 +93,10 @@ func New(nodeID ids.NodeID, b []byte) (*Config, error) {
 	}
 
 	c.Client = requester.New(c.HubPorturi)
-	success, err := requester.Ping(c.Client)
-	if err != nil || !success /*lol*/ {
-		return nil, fmt.Errorf("%s: can't Ping Server", err)
-	}
+	// success, err := requester.Ping(c.Client)
+	// if err != nil || !success /*lol*/ {
+	// 	return nil, fmt.Errorf("%s: can't Ping Server", err)
+	// }
 
 	return c, nil
 }
