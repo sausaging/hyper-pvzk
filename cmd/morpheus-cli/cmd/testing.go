@@ -150,6 +150,7 @@ var retryDeployCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal("Error reading file:", err)
 		}
+		arr := make([]ids.ID, 0)
 		var jsonData map[string]txData
 		if err := json.Unmarshal(data, &jsonData); err != nil {
 			// Handle potential errors if the file is empty or invalid JSON
@@ -165,8 +166,10 @@ var retryDeployCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
+
 			if contains && success {
-				delete(jsonData, txID.String())
+				// delete(jsonData, txID.String())
+				arr = append(arr, txID)
 			} else {
 				// @todo send the tx again
 
@@ -180,9 +183,13 @@ var retryDeployCmd = &cobra.Command{
 				// if err != nil {
 				// 	return err
 				// }
-				delete(jsonData, txID.String())
+				// delete(jsonData, txID.String())
+				arr = append(arr, txID)
 				jsonData[txID2.String()] = txDa
 			}
+		}
+		for _, i := range arr {
+			delete(jsonData, i.String())
 		}
 		return err
 	},
