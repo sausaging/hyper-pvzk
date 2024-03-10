@@ -88,6 +88,8 @@ func handleTx(tx *chain.Transaction, result *chain.Result) {
 		case *actions.Deploy:
 			summaryStr =
 				fmt.Sprintf("added chunk with index: %d", action.ChunkIndex)
+		case *actions.SP1:
+			summaryStr = fmt.Sprintf("successfully verified sp1 proof of image id: %d", action.ImageID)
 		}
 	}
 	utils.Outf(
