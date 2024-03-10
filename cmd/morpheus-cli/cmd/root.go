@@ -150,6 +150,7 @@ func init() {
 		registerCmd,
 		deployCmd,
 		verifyCmd,
+		retryDeployCmd,
 	)
 	// spam
 	runSpamCmd.PersistentFlags().BoolVar(

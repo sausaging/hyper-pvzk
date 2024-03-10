@@ -43,8 +43,8 @@ func (*SP1) GetTypeID() uint8 {
 
 func (s *SP1) StateKeys(actor codec.Address, txID ids.ID) state.Keys {
 	return state.Keys{
-		string(storage.DeployKey(s.ImageID, elfValType)):     state.All, // ELF key
-		string(storage.DeployKey(s.ImageID, s.ProofValType)): state.All, // Proof key
+		string(storage.DeployKey(s.ImageID, elfValType)):             state.All, // ELF key
+		string(storage.DeployKey(s.ImageID, uint16(s.ProofValType))): state.All, // Proof key
 	}
 }
 
@@ -93,7 +93,7 @@ func (s *SP1) Execute(
 ) (bool, uint64, []byte, *warp.UnsignedMessage, error) {
 
 	imageID := s.ImageID
-	valType := s.ProofValType
+	valType := uint16(s.ProofValType)
 	elfBytes, err := storage.GetDeployType(ctx, mu, imageID, elfValType)
 	if err != nil {
 		return false, 1000, utils.ErrBytes(fmt.Errorf("%s: can't get elf from state", err)), nil, nil
@@ -104,7 +104,7 @@ func (s *SP1) Execute(
 		return false, 2000, utils.ErrBytes(fmt.Errorf("%s: can't get proof at type %d from state", err, valType)), nil, nil
 	}
 	// store files to disk
-	elfFilePath := requester.BASEFILEPATH + "sp1" + imageID.String() + txID.String() + strconv.Itoa(int(elfValType)) + ".json"
+	elfFilePath := requester.BASEFILEPATH + "sp1" + imageID.String() + txID.String() + strconv.Itoa(int(elfValType)) + ".elf"
 	proofFilePath := requester.BASEFILEPATH + "sp1" + imageID.String() + txID.String() + strconv.Itoa(int(valType)) + ".json"
 
 	if err := WriteFile(elfFilePath, elfBytes); err != nil {

@@ -20,6 +20,7 @@ var _ chain.Action = (*Deploy)(nil)
 type Deploy struct {
 	ImageID      ids.ID `json:"imageId"`
 	ProofvalType uint64 `json:"proofValType"` // type will be 1 for ELF and 1 + for proofs
+	ChunkIndex   uint64 `json:"chunkIndex"`   // chunk index, starts from 0
 	Data         []byte `json:"data"`
 }
 
@@ -29,12 +30,13 @@ func (*Deploy) GetTypeID() uint8 {
 
 func (d *Deploy) StateKeys(actor codec.Address, txID ids.ID) state.Keys {
 	return state.Keys{
-		string(storage.DeployKey(d.ImageID, d.ProofvalType)): state.All,
+		string(storage.DeployKey(d.ImageID, uint16(d.ProofvalType))): state.All,
+		string(storage.ChunkKey(d.ImageID, uint16(d.ProofvalType))):  state.All,
 	}
 }
 
 func (*Deploy) StateKeysMaxChunks() []uint16 {
-	return []uint16{consts.MaxUint16}
+	return []uint16{consts.MaxUint16, consts.MaxUint16}
 }
 
 func (*Deploy) OutputsWarpMessage() bool {
@@ -74,10 +76,22 @@ func (d *Deploy) Execute(
 	mu state.Mutable,
 	_ int64,
 	actor codec.Address,
-	txID ids.ID,
+	_ ids.ID,
 	_ bool,
 ) (bool, uint64, []byte, *warp.UnsignedMessage, error) {
-	if err := storage.StoreDeployType(ctx, mu, d.ImageID, d.ProofvalType, d.Data); err != nil {
+	imageID := d.ImageID
+	valType := uint16(d.ProofvalType)
+	data := d.Data
+	chunkIndex := uint16(d.ChunkIndex)
+	chunkSize, totalBytes, err := storage.GetRegistration(ctx, mu, imageID, valType)
+	if err != nil {
+		return false, 1_000, utils.ErrBytes(fmt.Errorf("%s: val type not registered yet", err)), nil, nil
+	}
+	if len(data) > int(chunkSize) && uint64(chunkIndex)*uint64(chunkSize) > totalBytes {
+		return false, 1_000, utils.ErrBytes(fmt.Errorf("chunk size %d is too small for data %d or invalid chunk index", chunkSize, len(data))), nil, nil
+	}
+
+	if err := storage.StoreDeployType(ctx, mu, imageID, valType, data, chunkIndex, chunkSize); err != nil {
 		return false, 1_000, utils.ErrBytes(fmt.Errorf("%s: deployemnt error", err)), nil, nil
 	}
 	return true, 10_000, nil, nil, nil

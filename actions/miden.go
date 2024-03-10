@@ -49,7 +49,7 @@ func (*Miden) GetTypeID() uint8 {
 
 func (m *Miden) StateKeys(actor codec.Address, txID ids.ID) state.Keys {
 	return state.Keys{
-		string(storage.DeployKey(m.ImageID, m.ProofValType)): state.All,
+		string(storage.DeployKey(m.ImageID, uint16(m.ProofValType))): state.All,
 	}
 }
 
@@ -103,7 +103,7 @@ func (m *Miden) Execute(
 ) (bool, uint64, []byte, *warp.UnsignedMessage, error) {
 
 	imageID := m.ImageID
-	proofValType := m.ProofValType
+	proofValType := uint16(m.ProofValType)
 	proofJsonBytes, err := storage.GetDeployType(ctx, mu, imageID, proofValType)
 	if err != nil {
 		return false, 1000, utils.ErrBytes(fmt.Errorf("%s: can't get proof at type %d from state", err, proofValType)), nil, nil

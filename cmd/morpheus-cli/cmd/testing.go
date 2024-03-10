@@ -2,15 +2,29 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"io/ioutil"
+	"log"
+	"os"
 	"time"
 
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/hypersdk/chain"
 	"github.com/ava-labs/hypersdk/consts"
+	"github.com/ava-labs/hypersdk/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/sausaging/hyper-pvzk/actions"
 	"github.com/spf13/cobra"
 )
+
+type txData struct {
+	ImageID      ids.ID
+	ProofValType uint64
+	ChunkIndex   uint64
+	Data         []byte
+}
+
+var chunkSize = 10 * 1024
 
 var testingCmd = &cobra.Command{
 	Use: "testing",
@@ -26,16 +40,36 @@ var registerCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		maxChunks, err := handler.Root().PromptInt("max chunks(feature not yet enabled)", int(consts.MaxUint16))
+		imageID, err := handler.Root().PromptID("image id")
 		if err != nil {
 			return err
 		}
+		// chunkSize, err := handler.Root().PromptInt("chunk size", int(consts.MaxUint16))
+		// if err != nil {
+		// 	return err
+		// }
+		valType, err := handler.Root().PromptInt("val type(1 for ELF, rest for proofs)", int(consts.MaxUint16))
+		if err != nil {
+			return err
+		}
+		filePath, err := handler.Root().PromptString("file path to register total bytes", 1, consts.MaxInt)
+		if err != nil {
+			return err
+		}
+		code, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			return err
+		}
+		totalBytes := uint64(len(code))
 		cont, err := handler.Root().PromptContinue()
 		if !cont || err != nil {
 			return err
 		}
 		_, _, err = sendAndWait(ctx, nil, &actions.Register{
-			MaxChunks: uint64(maxChunks),
+			ImageID:    imageID,
+			ChunkSize:  uint64(chunkSize),
+			ValType:    uint64(valType),
+			TotalBytes: totalBytes,
 		}, cli, bcli, ws, factory, true)
 		return err
 	},
@@ -44,8 +78,10 @@ var registerCmd = &cobra.Command{
 var deployCmd = &cobra.Command{
 	Use: "deploy",
 	RunE: func(*cobra.Command, []string) error {
+
 		ctx := context.Background()
 		_, _, factory, cli, bcli, ws, err := handler.DefaultActor()
+		// go listenAndRetry(ws, bcli, cli, factory)
 		if err != nil {
 			return err
 		}
@@ -69,19 +105,82 @@ var deployCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		chunkSize := 10 * 1024
-		for i := 0; i < len(code); i += chunkSize {
-			end := i + chunkSize
+		totalChunks := len(code) / chunkSize
+		for i := 0; i <= totalChunks; i++ {
+			end := (i + 1) * chunkSize
 			if end > len(code) {
 				end = len(code)
 			}
-			_, err = send(ctx, nil, &actions.Deploy{
+			txID, err := send(ctx, nil, &actions.Deploy{
 				ImageID:      imageID,
 				ProofvalType: uint64(valType),
-				Data:         code[i:end],
+				ChunkIndex:   uint64(i),
+				Data:         code[i*chunkSize : end],
 			}, cli, bcli, ws, factory)
-			if (i/chunkSize)%10 == 0 && i != 0 {
-				time.Sleep(30 * time.Second)
+			if err != nil {
+				return err
+			}
+			WriteToJson(txData{
+				ImageID:      imageID,
+				ProofValType: uint64(valType),
+				ChunkIndex:   uint64(i),
+				Data:         code[i*chunkSize : end],
+			}, txID)
+
+			utils.Outf("{{yellow}}sent chunk %d{{/}}\n", i)
+			if i%5 == 0 && i != 0 {
+				time.Sleep(15 * time.Second)
+			}
+
+		}
+		return err
+	},
+}
+
+var retryDeployCmd = &cobra.Command{
+	Use: "retry",
+	RunE: func(*cobra.Command, []string) error {
+		ctx := context.Background()
+		fileName := "./data.json"
+		_, _, factory, cli, bcli, ws, err := handler.DefaultActor()
+		if err != nil {
+			return err
+		}
+		data, err := os.ReadFile(fileName)
+		if err != nil {
+			log.Fatal("Error reading file:", err)
+		}
+		var jsonData map[string]txData
+		if err := json.Unmarshal(data, &jsonData); err != nil {
+			// Handle potential errors if the file is empty or invalid JSON
+			jsonData = make(map[string]txData)
+		}
+		for txID, txDa := range jsonData {
+			txID, err := ids.FromString(txID)
+			if err != nil {
+				return err
+			}
+			// txDa2 := txDa.(txData)
+			contains, success, _, _, err := bcli.Tx(ctx, txID)
+			if err != nil {
+				return err
+			}
+			if contains && success {
+				delete(jsonData, txID.String())
+			} else {
+				// @todo send the tx again
+				utils.Outf("{{yellow}}retrying tx:{{/}} %s\n", txID)
+				txID2, err := send(ctx, nil, &actions.Deploy{
+					ImageID:      txDa.ImageID,
+					ProofvalType: txDa.ProofValType,
+					ChunkIndex:   txDa.ChunkIndex,
+					Data:         txDa.Data,
+				}, cli, bcli, ws, factory)
+				if err != nil {
+					return err
+				}
+				delete(jsonData, txID.String())
+				jsonData[txID2.String()] = txDa
 			}
 		}
 		return err
@@ -159,4 +258,82 @@ var verifyCmd = &cobra.Command{
 		return err
 
 	},
+}
+
+// func listenAndRetry(ws *rpc.WebSocketClient, bcli *brpc.JSONRPCClient, cli *rpc.JSONRPCClient, factory chain.AuthFactory) {
+// 	ctx := context.Background()
+// 	ws.RegisterBlocks()
+// 	pendingTxs := make(map[ids.ID]txData)
+// 	p, _ := bcli.Parser(context.TODO())
+// 	utils.Outf("{{yellow}}listening for blocks{{/}}\n")
+// 	for {
+// 		txD := <-status
+// 		pendingTxs[txD.txID] = txD.txD
+// 		utils.Outf("{{yellow}}pending txs:{{/}} %d\n", len(pendingTxs))
+// 		blk, result, _, err := ws.ListenBlock(ctx, p)
+// 		if err != nil {
+// 			utils.Outf("{{red}} error listening block: %s{{/}}\n", err)
+// 		}
+// 		for i, tx := range blk.Txs {
+// 			for txID, txdata := range pendingTxs {
+// 				if txID == tx.ID() {
+// 					if result[i].Success {
+// 						utils.Outf("{{green}}tx %s succeeded{{/}}\n", txID)
+// 						delete(pendingTxs, txID)
+// 					} else {
+// 						utils.Outf("{{red}}tx %s failed, retrying{{/}}\n", txID)
+// 						delete(pendingTxs, txID)
+// 						txID, err := send(ctx, nil, &actions.Deploy{
+// 							ImageID:      txdata.ImageID,
+// 							ProofvalType: txdata.ProofValType,
+// 							ChunkIndex:   txdata.ChunkIndex,
+// 							Data:         txdata.Data,
+// 						}, cli, bcli, ws, factory)
+// 						if err != nil {
+// 							utils.Outf("{{red}}%s{{/}}\n", err)
+// 						} else {
+// 							pendingTxs[txID] = txData{
+// 								ImageID:      txdata.ImageID,
+// 								ProofValType: txdata.ProofValType,
+// 								ChunkIndex:   txdata.ChunkIndex,
+// 								Data:         txdata.Data,
+// 							}
+
+// 						}
+// 					}
+// 				}
+// 			}
+
+// 		}
+
+// 		// utils.Outf("{{yellow}}skipping unexpected transaction:{{/}} %s\n", tx.ID())
+// 	}
+// }
+
+func WriteToJson(obj txData, txID ids.ID) {
+	fileName := "./data.json"
+
+	// Read the existing data from the file
+	data, err := os.ReadFile(fileName)
+	if err != nil {
+		log.Fatal("Error reading file:", err)
+	}
+	var jsonData map[string]interface{}
+	if err := json.Unmarshal(data, &jsonData); err != nil {
+		// Handle potential errors if the file is empty or invalid JSON
+		jsonData = make(map[string]interface{})
+	}
+	jsonData[txID.String()] = obj
+	newData, err := json.MarshalIndent(jsonData, "", "  ")
+	if err != nil {
+		log.Fatal("Error marshalling data:", err)
+	}
+
+	// Write the updated JSON data back to the file
+	err = ioutil.WriteFile(fileName, newData, 0644)
+	if err != nil {
+		log.Fatal("Error writing to file:", err)
+	}
+
+	// log.Println("Successfully added object to", fileName)
 }

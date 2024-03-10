@@ -8,5 +8,5 @@ const (
 )
 
 const (
-	BASEFILEPATH = "/tmp/hypersdk/sausage/" //@todo temp directory
+	BASEFILEPATH = "/tmp/hypersdk/sausage/"
 )

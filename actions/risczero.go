@@ -44,7 +44,7 @@ func (*RiscZero) GetTypeID() uint8 {
 
 func (r *RiscZero) StateKeys(actor codec.Address, txID ids.ID) state.Keys {
 	return state.Keys{
-		string(storage.DeployKey(r.ImageID, r.ProofValType)): state.All,
+		string(storage.DeployKey(r.ImageID, uint16(r.ProofValType))): state.All,
 	}
 }
 
@@ -99,7 +99,7 @@ func (r *RiscZero) Execute(
 	proofValType := r.ProofValType
 	riscZeroImageID := r.RiscZeroImageID
 
-	proofJsonBytes, err := storage.GetDeployType(ctx, mu, imageID, proofValType)
+	proofJsonBytes, err := storage.GetDeployType(ctx, mu, imageID, uint16(proofValType))
 	if err != nil {
 		return false, 1000, utils.ErrBytes(fmt.Errorf("%s: can't get proof at type %d from state", err, proofValType)), nil, nil
 	}

@@ -53,7 +53,8 @@ const (
 )
 
 const BalanceChunks uint16 = 1
-const registerChunks uint16 = consts.MaxUint16
+
+// const registerChunks uint16 = consts.MaxUint16
 
 var (
 	failureByte  = byte(0x0)
@@ -276,58 +277,94 @@ func OutgoingWarpKeyPrefix(txID ids.ID) (k []byte) {
 	return k
 }
 
-func ChunkKey(txID ids.ID, maxChunks uint16) (k []byte) {
+func ChunkKey(imageID ids.ID, registerType uint16) (k []byte) {
 	k = make([]byte, 1+consts.IDLen+consts.Uint16Len)
 	k[0] = registerPrefix
-	copy(k[1:], txID[:])
-	binary.BigEndian.PutUint16(k[1+consts.IDLen:], maxChunks)
+	copy(k[1:], imageID[:])
+	binary.BigEndian.PutUint16(k[1+consts.IDLen:], registerType)
 	return k
 }
 
-func StoreRegistration(ctx context.Context,
+func StoreRegistration(
+	ctx context.Context,
 	mu state.Mutable,
-	addr codec.Address,
-	txID ids.ID,
-	chunks uint16,
+	imageID ids.ID,
+	registerType uint16,
+	chunkSize uint16,
+	totalBytes uint64,
 ) error {
-	key := ChunkKey(txID, chunks)
-	return mu.Insert(ctx, key, binary.BigEndian.AppendUint16([]byte{}, chunks))
+	key := ChunkKey(imageID, registerType)
+	data := binary.BigEndian.AppendUint16([]byte{}, chunkSize)
+	data = binary.BigEndian.AppendUint64(data, totalBytes)
+	return mu.Insert(ctx, key, data)
 }
 
-func DeployKey(txID ids.ID, valType uint64) (k []byte) {
-	k = make([]byte, 1+consts.IDLen+consts.Uint64Len+consts.Uint16Len)
+func GetRegistration(
+	ctx context.Context,
+	im state.Immutable,
+	imageID ids.ID,
+	valType uint16,
+) (uint16, uint64, error) {
+	key := ChunkKey(imageID, valType)
+	data, err := im.GetValue(ctx, key)
+	if err != nil {
+		return 0, 0, err
+	}
+	chunkSize := binary.BigEndian.Uint16(data[:consts.Uint16Len])
+	totalBytes := binary.BigEndian.Uint64(data[consts.Uint16Len:])
+	return chunkSize, totalBytes, nil
+}
+
+func DeployKey(txID ids.ID, valType uint16) (k []byte) {
+	k = make([]byte, 1+consts.IDLen+consts.Uint16Len+consts.Uint16Len)
 	k[0] = deployPrefix
 	copy(k[1:], txID[:])
-	binary.BigEndian.PutUint64(k[1+consts.IDLen:], valType)
-	binary.BigEndian.PutUint16(k[1+consts.IDLen+consts.Uint64Len:], consts.MaxUint16)
+	binary.BigEndian.PutUint16(k[1+consts.IDLen:], valType)
+	binary.BigEndian.PutUint16(k[1+consts.IDLen+consts.Uint16Len:], consts.MaxUint16)
 	return k
 }
 
 func StoreDeployType(
 	ctx context.Context,
 	mu state.Mutable,
-	contractID ids.ID,
-	valType uint64,
+	imageID ids.ID,
+	valType uint16,
 	data []byte,
+	chunkIndex uint16,
+	chunkSize uint16,
 ) error {
-	k := DeployKey(contractID, valType)
+	k := DeployKey(imageID, valType)
 	val, err := mu.GetValue(ctx, k)
-	if err != nil && !errors.Is(err, database.ErrNotFound) {
+	if err != nil {
 		return err
 	}
-	if errors.Is(err, database.ErrNotFound) {
-		return mu.Insert(ctx, k, data)
+	var newVal []byte
+	start := uint64(chunkIndex) * uint64(chunkSize)
+	if start+uint64(chunkSize) > uint64(len(val)) { // end case
+		newVal = append(val[:start], data...) // data len not matches the free end limit, throws an error
+	} else {
+		newVal = append(val[:start], append(data, val[start+uint64(chunkSize):]...)...)
 	}
-	val = append(val, data...)
-	return mu.Insert(ctx, k, val)
+	return mu.Insert(ctx, k, newVal)
+}
+
+func InitiateDeployType(
+	ctx context.Context,
+	mu state.Mutable,
+	imageID ids.ID,
+	valType uint16,
+	initiationBytes []byte,
+) error {
+	k := DeployKey(imageID, valType)
+	return mu.Insert(ctx, k, initiationBytes)
 }
 
 func GetDeployType(
 	ctx context.Context,
 	im state.Immutable,
-	contractID ids.ID,
-	valType uint64,
+	imageID ids.ID,
+	valType uint16,
 ) ([]byte, error) {
-	k := DeployKey(contractID, valType)
+	k := DeployKey(imageID, valType)
 	return im.GetValue(ctx, k)
 }

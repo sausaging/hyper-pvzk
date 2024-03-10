@@ -18,7 +18,10 @@ import (
 var _ chain.Action = (*Register)(nil)
 
 type Register struct {
-	MaxChunks uint64 `json:"max_chunks"` //@todo feature implementation of max_chunks has not yet been realised
+	ImageID    ids.ID `json:"image_id"`
+	ValType    uint64 `json:"val_type"`    // 1 for elf, 1 + for proofs
+	ChunkSize  uint64 `json:"chunk_size"`  // in bytes
+	TotalBytes uint64 `json:"total_bytes"` // total bytes for elf/proofs
 }
 
 func (*Register) GetTypeID() uint8 {
@@ -27,7 +30,8 @@ func (*Register) GetTypeID() uint8 {
 
 func (r *Register) StateKeys(actor codec.Address, txID ids.ID) state.Keys {
 	return state.Keys{
-		string(storage.ChunkKey(txID, uint16(r.MaxChunks))): state.All,
+		string(storage.ChunkKey(r.ImageID, uint16(r.ValType))):  state.All,
+		string(storage.DeployKey(r.ImageID, uint16(r.ValType))): state.All,
 	}
 }
 
@@ -40,15 +44,18 @@ func (*Register) OutputsWarpMessage() bool {
 }
 
 func (*Register) MaxComputeUnits(chain.Rules) uint64 {
-	return RegisterComputeUnits + 1000
+	return RegisterComputeUnits
 }
 
 func (*Register) Size() int {
-	return consts.Uint64Len
+	return consts.IDLen + 3*consts.Uint64Len
 }
 
 func (r *Register) Marshal(p *codec.Packer) {
-	p.PackUint64(r.MaxChunks)
+	p.PackID(r.ImageID)
+	p.PackUint64(r.ValType)
+	p.PackUint64(r.ChunkSize)
+	p.PackUint64(r.TotalBytes)
 }
 
 func (*Register) ValidRange(chain.Rules) (int64, int64) {
@@ -64,15 +71,28 @@ func (r *Register) Execute(
 	actor codec.Address,
 	txID ids.ID,
 	_ bool,
-) (bool, uint64, []byte, *warp.UnsignedMessage, error) {
-	if err := storage.StoreRegistration(ctx, mu, actor, txID, uint16(r.MaxChunks)); err != nil {
-		return false, RegisterComputeUnits, utils.ErrBytes(fmt.Errorf("%s: can't store registration", err)), nil, nil
+) (bool, uint64, []byte, *warp.UnsignedMessage, error) { // @todo check the math
+	totalBytes := r.TotalBytes
+	valType := uint16(r.ValType)
+	chunkSize := uint16(r.ChunkSize)
+	imageID := r.ImageID
+	if totalBytes > uint64(consts.MaxUint16)*64 {
+		return false, RegisterComputeUnits, utils.ErrBytes(fmt.Errorf("total bytes %d is too large, max: %d", totalBytes, uint64(consts.MaxUint16)*64)), nil, nil
+	}
+	if err := storage.StoreRegistration(ctx, mu, imageID, valType, chunkSize, totalBytes); err != nil {
+		return false, RegisterComputeUnits / 2, utils.ErrBytes(fmt.Errorf("%s: can't store registration", err)), nil, nil
+	}
+	if err := storage.InitiateDeployType(ctx, mu, imageID, valType, make([]byte, int(r.TotalBytes))); err != nil {
+		return false, 3 * RegisterComputeUnits / 4, utils.ErrBytes(fmt.Errorf("%s: can't initiate deploy type", err)), nil, nil
 	}
 	return true, RegisterComputeUnits, nil, nil, nil
 }
 
 func UnmarshalRegister(p *codec.Packer, _ *warp.Message) (chain.Action, error) {
 	var registerImage Register
-	registerImage.MaxChunks = p.UnpackUint64(true)
+	p.UnpackID(true, &registerImage.ImageID)
+	registerImage.ValType = p.UnpackUint64(true)
+	registerImage.ChunkSize = p.UnpackUint64(true)
+	registerImage.TotalBytes = p.UnpackUint64(true)
 	return &registerImage, nil
 }
