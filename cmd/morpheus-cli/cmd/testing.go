@@ -12,7 +12,6 @@ import (
 	"github.com/ava-labs/hypersdk/chain"
 	"github.com/ava-labs/hypersdk/consts"
 	"github.com/ava-labs/hypersdk/utils"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/sausaging/hyper-pvzk/actions"
 	"github.com/spf13/cobra"
 )
@@ -251,15 +250,15 @@ var verifyCmd = &cobra.Command{
 			}
 
 		} else if verifyType == 3 {
-			input, err := handler.Root().PromptString("risc zero image id", 1, 128)
+			riscZeroImageID, err := handler.Root().PromptString("risc zero image id", 1, consts.MaxInt)
 			if err != nil {
 				return err
 			}
-			riscZeroImageID := common.FromHex(input)
+
 			action = &actions.RiscZero{
 				ImageID:         imageID,
 				ProofValType:    uint64(valType),
-				RiscZeroImageID: [32]byte(riscZeroImageID),
+				RiscZeroImageID: riscZeroImageID,
 			}
 		} else {
 			return ErrInvalidVerificationType
@@ -272,6 +271,34 @@ var verifyCmd = &cobra.Command{
 		return err
 
 	},
+}
+
+func WriteToJson(obj txData, txID ids.ID) {
+	fileName := "./data.json"
+
+	// Read the existing data from the file
+	data, err := os.ReadFile(fileName)
+	if err != nil {
+		log.Fatal("Error reading file:", err)
+	}
+	var jsonData map[string]interface{}
+	if err := json.Unmarshal(data, &jsonData); err != nil {
+		// Handle potential errors if the file is empty or invalid JSON
+		jsonData = make(map[string]interface{})
+	}
+	jsonData[txID.String()] = obj
+	newData, err := json.MarshalIndent(jsonData, "", "  ")
+	if err != nil {
+		log.Fatal("Error marshalling data:", err)
+	}
+
+	// Write the updated JSON data back to the file
+	err = ioutil.WriteFile(fileName, newData, 0644)
+	if err != nil {
+		log.Fatal("Error writing to file:", err)
+	}
+
+	// log.Println("Successfully added object to", fileName)
 }
 
 // func listenAndRetry(ws *rpc.WebSocketClient, bcli *brpc.JSONRPCClient, cli *rpc.JSONRPCClient, factory chain.AuthFactory) {
@@ -323,31 +350,3 @@ var verifyCmd = &cobra.Command{
 // 		// utils.Outf("{{yellow}}skipping unexpected transaction:{{/}} %s\n", tx.ID())
 // 	}
 // }
-
-func WriteToJson(obj txData, txID ids.ID) {
-	fileName := "./data.json"
-
-	// Read the existing data from the file
-	data, err := os.ReadFile(fileName)
-	if err != nil {
-		log.Fatal("Error reading file:", err)
-	}
-	var jsonData map[string]interface{}
-	if err := json.Unmarshal(data, &jsonData); err != nil {
-		// Handle potential errors if the file is empty or invalid JSON
-		jsonData = make(map[string]interface{})
-	}
-	jsonData[txID.String()] = obj
-	newData, err := json.MarshalIndent(jsonData, "", "  ")
-	if err != nil {
-		log.Fatal("Error marshalling data:", err)
-	}
-
-	// Write the updated JSON data back to the file
-	err = ioutil.WriteFile(fileName, newData, 0644)
-	if err != nil {
-		log.Fatal("Error writing to file:", err)
-	}
-
-	// log.Println("Successfully added object to", fileName)
-}

@@ -24,14 +24,14 @@ import (
 var _ chain.Action = (*RiscZero)(nil)
 
 type RiscZero struct {
-	ImageID         ids.ID   `json:"image_id"`
-	ProofValType    uint64   `json:"proof_val_type"`
-	RiscZeroImageID [32]byte `json:"risc_zero_image_id"`
+	ImageID         ids.ID `json:"image_id"`
+	ProofValType    uint64 `json:"proof_val_type"`
+	RiscZeroImageID string `json:"risc_zero_image_id"`
 }
 
 type RiscZeroArgs struct {
-	RiscZeroImageID [32]byte `json:"risc_zero_image_id"`
-	ProofFilePath   string   `json:"proof_file_path"`
+	RiscZeroImageID string `json:"risc_zero_image_id"`
+	ProofFilePath   string `json:"proof_file_path"`
 }
 
 type RiscZeroReplyArgs struct {
@@ -61,22 +61,20 @@ func (*RiscZero) MaxComputeUnits(chain.Rules) uint64 {
 }
 
 func (r *RiscZero) Size() int {
-	return consts.IDLen + consts.Uint64Len + 8*consts.Uint32Len
+	return consts.IDLen + consts.Uint64Len + len(r.RiscZeroImageID)
 }
 
 func (r *RiscZero) Marshal(p *codec.Packer) {
 	p.PackID(r.ImageID)
 	p.PackUint64(r.ProofValType)
-	p.PackFixedBytes(r.RiscZeroImageID[:])
+	p.PackString(r.RiscZeroImageID)
 }
 
 func UnmarshalRiscZero(p *codec.Packer, _ *warp.Message) (chain.Action, error) {
 	var riscZero RiscZero
 	p.UnpackID(true, &riscZero.ImageID)
 	riscZero.ProofValType = p.UnpackUint64(true)
-	var dummy []byte
-	p.UnpackFixedBytes(32, &dummy)
-	riscZero.RiscZeroImageID = [32]byte(dummy)
+	riscZero.RiscZeroImageID = p.UnpackString(true)
 	return &riscZero, nil
 }
 
