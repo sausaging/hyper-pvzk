@@ -129,7 +129,7 @@ var deployCmd = &cobra.Command{
 			}, txID)
 
 			utils.Outf("{{yellow}} sent chunk %d{{/}}\n{{green}} offset: %d, file size: %d{{/}}\n", chunkIndex, end, len(code))
-			if chunkIndex%5 == 0 && chunkIndex != 0 {
+			if chunkIndex%25 == 0 && chunkIndex != 0 {
 				time.Sleep(15 * time.Second)
 			}
 		}
