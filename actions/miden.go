@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+
 	"strconv"
 
 	"github.com/ava-labs/avalanchego/ids"
@@ -22,24 +23,24 @@ import (
 var _ chain.Action = (*Miden)(nil)
 
 type Miden struct {
-	ImageID      ids.ID `json:"imageID"`
-	ProofValType uint64 `json:"proofValType"`
+	ImageID      ids.ID `json:"image_id"`
+	ProofValType uint64 `json:"proof_val_type"`
 	//@todo future support: large code, inputs, outputs support
-	CodeFrontEnd    string `json:"codeFrontEnd"`
-	InputsFrontEnd  string `json:"inputsFrontEnd"`
-	OutputsFrontEnd string `json:"outputsFrontEnd"`
+	CodeFrontEnd    string `json:"code_front_end"`
+	InputsFrontEnd  string `json:"inputs_front_end"`
+	OutputsFrontEnd string `json:"outputs_front_end"`
 }
 
 type MidenRequestArgs struct {
-	CodeFrontEnd    string `json:"codeFrontEnd"`
-	InputsFrontEnd  string `json:"inputsFrontEnd"`
-	OutputsFrontEnd string `json:"outputsFrontEnd"`
-	ProofFilePath   string `json:"proofFilePath"`
+	CodeFrontEnd    string `json:"code_front_end"`
+	InputsFrontEnd  string `json:"inputs_front_end"`
+	OutputsFrontEnd string `json:"outputs_front_end"`
+	ProofFilePath   string `json:"proof_file_path"`
 }
 
 type MidenReplyArgs struct {
 	//@todo intro security field
-	IsValid bool `json:"isValid"`
+	IsValid bool `json:"is_valid"`
 }
 
 func (*Miden) GetTypeID() uint8 {
@@ -108,8 +109,8 @@ func (m *Miden) Execute(
 		return false, 1000, utils.ErrBytes(fmt.Errorf("%s: can't get proof at type %d from state", err, proofValType)), nil, nil
 	}
 
-	proofFilePath := requester.BASEFILEPATH + imageID.String() + strconv.Itoa(int(proofValType)) + ".json"
-	if err := utils.SaveBytes(proofFilePath, proofJsonBytes); err != nil {
+	proofFilePath := requester.BASEFILEPATH + "miden" + imageID.String() + txID.String() + strconv.Itoa(int(proofValType)) + ".json"
+	if err := WriteFile(proofFilePath, proofJsonBytes); err != nil {
 		return false, 2000, utils.ErrBytes(fmt.Errorf("%s: can't write proof to disk", err)), nil, nil
 	}
 

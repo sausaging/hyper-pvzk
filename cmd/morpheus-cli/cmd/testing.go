@@ -7,6 +7,7 @@ import (
 
 	"github.com/ava-labs/hypersdk/chain"
 	"github.com/ava-labs/hypersdk/consts"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/sausaging/hyper-pvzk/actions"
 	"github.com/spf13/cobra"
 )
@@ -137,7 +138,16 @@ var verifyCmd = &cobra.Command{
 			}
 
 		} else if verifyType == 3 {
-			// action = &actions. //@todo
+			input, err := handler.Root().PromptString("risc zero image id", 1, 128)
+			if err != nil {
+				return err
+			}
+			riscZeroImageID := common.FromHex(input)
+			action = &actions.RiscZero{
+				ImageID:         imageID,
+				ProofValType:    uint64(valType),
+				RiscZeroImageID: [32]byte(riscZeroImageID),
+			}
 		} else {
 			return ErrInvalidVerificationType
 		}

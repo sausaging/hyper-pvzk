@@ -72,7 +72,7 @@ func send(ctx context.Context, warpMsg *warp.Message, action chain.Action, cli *
 		utils.Outf("Error submitting Tx")
 		return ids.Empty, nil
 	}
-	utils.Outf("{{yellow}}Submited txID: %s to mempool txID:{{/}}\n", tx.ID())
+	utils.Outf("{{yellow}}Submited txID:{{/}} %s {{yellow}}to mempool{{/}}\n", tx.ID())
 	return tx.ID(), nil
 }
 

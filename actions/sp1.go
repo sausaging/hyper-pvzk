@@ -24,17 +24,17 @@ var _ chain.Action = (*SP1)(nil)
 const elfValType = 1
 
 type SP1 struct {
-	ImageID      ids.ID `json:"imageId"`
-	ProofValType uint64 `json:"proofValType"`
+	ImageID      ids.ID `json:"image_id"`
+	ProofValType uint64 `json:"proof_val_type"`
 }
 
 type SP1RequestArgs struct {
-	ELFFilePath   string `json:"elfFilePath"`
-	ProofFilePath string `json:"proofFilePath"`
+	ELFFilePath   string `json:"elf_file_path"`
+	ProofFilePath string `json:"proof_file_path"`
 }
 
 type SP1ReplyArgs struct {
-	IsValid bool `json:"isValid"`
+	IsValid bool `json:"is_valid"`
 }
 
 func (*SP1) GetTypeID() uint8 {
@@ -104,13 +104,13 @@ func (s *SP1) Execute(
 		return false, 2000, utils.ErrBytes(fmt.Errorf("%s: can't get proof at type %d from state", err, valType)), nil, nil
 	}
 	// store files to disk
-	elfFilePath := requester.BASEFILEPATH + imageID.String() + strconv.Itoa(int(elfValType)) + ".txt"
-	proofFilePath := requester.BASEFILEPATH + imageID.String() + strconv.Itoa(int(valType)) + ".json"
+	elfFilePath := requester.BASEFILEPATH + "sp1" + imageID.String() + txID.String() + strconv.Itoa(int(elfValType)) + ".json"
+	proofFilePath := requester.BASEFILEPATH + "sp1" + imageID.String() + txID.String() + strconv.Itoa(int(valType)) + ".json"
 
-	if err := utils.SaveBytes(elfFilePath, elfBytes); err != nil {
+	if err := WriteFile(elfFilePath, elfBytes); err != nil {
 		return false, 3000, utils.ErrBytes(fmt.Errorf("%s: can't write elf to disk", err)), nil, nil
 	}
-	if err := utils.SaveBytes(proofFilePath, proofJsonBytes); err != nil {
+	if err := WriteFile(proofFilePath, proofJsonBytes); err != nil {
 		return false, 4000, utils.ErrBytes(fmt.Errorf("%s: can't write proof to disk", err)), nil, nil
 	}
 

@@ -24,18 +24,18 @@ import (
 var _ chain.Action = (*RiscZero)(nil)
 
 type RiscZero struct {
-	ImageID         ids.ID   `json:"imageID"`
-	ProofValType    uint64   `json:"proofValType"`
-	RiscZeroImageID [32]byte `json:"riscZeroImageID"`
+	ImageID         ids.ID   `json:"image_id"`
+	ProofValType    uint64   `json:"proof_val_type"`
+	RiscZeroImageID [32]byte `json:"risc_zero_image_id"`
 }
 
 type RiscZeroArgs struct {
-	RiscZeroImageID [32]byte `json:"riscZeroImageID"`
-	ProofFilePath   string   `json:"proofFilePath"`
+	RiscZeroImageID [32]byte `json:"risc_zero_image_id"`
+	ProofFilePath   string   `json:"proof_file_path"`
 }
 
 type RiscZeroReplyArgs struct {
-	IsValid bool `json:"isValid"`
+	IsValid bool `json:"is_valid"`
 }
 
 func (*RiscZero) GetTypeID() uint8 {
@@ -104,8 +104,8 @@ func (r *RiscZero) Execute(
 		return false, 1000, utils.ErrBytes(fmt.Errorf("%s: can't get proof at type %d from state", err, proofValType)), nil, nil
 	}
 
-	proofFilePath := requester.BASEFILEPATH + imageID.String() + strconv.Itoa(int(proofValType)) + ".json"
-	if err := utils.SaveBytes(proofFilePath, proofJsonBytes); err != nil {
+	proofFilePath := requester.BASEFILEPATH + "risczero" + imageID.String() + txID.String() + strconv.Itoa(int(proofValType)) + ".json"
+	if err := WriteFile(proofFilePath, proofJsonBytes); err != nil {
 		return false, 2000, utils.ErrBytes(fmt.Errorf("%s: can't write proof to disk", err)), nil, nil
 	}
 

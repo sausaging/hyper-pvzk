@@ -9,7 +9,12 @@ import (
 
 func WriteFile(filePath string, data []byte) error {
 	// Write the data to the file
-	err := os.WriteFile(filePath, data, 0644)
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close() // Ensure file is closed even if errors occur
+	_, err = file.Write(data)
 	if err != nil {
 		return err
 	}
