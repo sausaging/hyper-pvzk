@@ -128,7 +128,7 @@ var deployCmd = &cobra.Command{
 				Data:         code[start:end],
 			}, txID)
 
-			utils.Outf("{{yellow}} sent chunk %d{{/}}\n{{green}} offset: %d, file size: %d{{/}}\n", chunkIndex, end, len(code))
+			utils.Outf("{{yellow}} sent chunk %d{{/}}\n{{green}} offset: %d, file size: %d{{/}}\n", chunkIndex+1, end, len(code))
 			if chunkIndex%25 == 0 && chunkIndex != 0 {
 				time.Sleep(15 * time.Second)
 			}

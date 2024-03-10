@@ -343,7 +343,7 @@ func StoreDeployType(
 	totalChunks := (uint64(len(val)) + uint64(chunkSize) - 1) / uint64(chunkSize) // Include the last chunk
 
 	if uint64(chunkIndex) > totalChunks {
-		return fmt.Errorf("chunk index out of range")
+		return fmt.Errorf("chunk index out of range, total chunks: %d, chunk index: %d", totalChunks, chunkIndex)
 	}
 	val = append(val[:start], data...)
 	return mu.Insert(ctx, k, val)
