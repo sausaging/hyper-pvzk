@@ -23,7 +23,7 @@ type txData struct {
 	Data         []byte
 }
 
-var chunkSize = 10 * 1024
+var chunkSize = 50
 
 var testingCmd = &cobra.Command{
 	Use: "testing",
@@ -216,7 +216,6 @@ var verifyCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		// @todo verifying system type
 		verifyType, err := handler.Root().PromptInt("verification type: 1 -> SP1, 2 -> Miden, 3 -> Risc0", 10)
 		if err != nil {
 			return err
@@ -228,7 +227,6 @@ var verifyCmd = &cobra.Command{
 				ProofValType: uint64(valType),
 			}
 		} else if verifyType == 2 {
-			//@todo do ask next questions
 			codeFrontEnd, err := handler.Root().PromptString("codeFrontEnd", 1, consts.MaxInt)
 			if err != nil {
 				return err

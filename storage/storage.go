@@ -324,6 +324,7 @@ func DeployKey(txID ids.ID, valType uint16) (k []byte) {
 	return k
 }
 
+// @todo get better chunk builder strategy
 func StoreDeployType(
 	ctx context.Context,
 	mu state.Mutable,
@@ -341,11 +342,15 @@ func StoreDeployType(
 	chunkIndex = chunkIndex - 1
 	start := uint64(chunkIndex) * uint64(chunkSize)
 	totalChunks := (uint64(len(val)) + uint64(chunkSize) - 1) / uint64(chunkSize) // Include the last chunk
-
 	if uint64(chunkIndex) > totalChunks {
 		return fmt.Errorf("chunk index out of range, total chunks: %d, chunk index: %d", totalChunks, chunkIndex)
 	}
-	val = append(val[:start], data...)
+	end := uint64((chunkIndex + 1)) * uint64(chunkSize)
+	if end > uint64(len(val)) {
+		end = uint64(len(val))
+	}
+	dataA := append(data, val[end:]...)
+	val = append(val[:start], dataA...)
 	return mu.Insert(ctx, k, val)
 }
 

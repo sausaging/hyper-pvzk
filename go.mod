@@ -13,10 +13,10 @@ require (
 	github.com/prometheus/client_golang v1.16.0
 	github.com/spf13/cobra v1.7.0
 	go.uber.org/zap v1.26.0
-	github.com/ethereum/go-ethereum v1.12.0
 )
 
 require (
+	github.com/ethereum/go-ethereum v1.12.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect

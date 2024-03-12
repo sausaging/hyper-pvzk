@@ -40,3 +40,6 @@ func (c *Controller) GetBalanceFromState(
 ) (uint64, error) {
 	return storage.GetBalanceFromState(ctx, c.inner.ReadState, acct)
 }
+
+//@todo abstract json rpc server and ws server from controller
+// and integrate them for individual commands and stratagies

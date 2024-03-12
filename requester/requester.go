@@ -52,10 +52,11 @@ func NewRequest(endPoint string, data []byte) (*http.Request, error) {
 
 func Ping(client *EndpointRequester) (bool, error) {
 	endPointUri := client.Uri + PINGENDPOINT
-	req, err := NewRequest(endPointUri, []byte{})
+	req, err := http.NewRequest(http.MethodGet, endPointUri, bytes.NewBuffer([]byte{}))
 	if err != nil {
 		return false, fmt.Errorf("%s: can't request http", err)
 	}
+	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Cli.Do(req)
 	if err != nil {
 		return false, fmt.Errorf("%s: can't do request", err)

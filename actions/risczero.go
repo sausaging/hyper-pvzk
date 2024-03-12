@@ -19,8 +19,6 @@ import (
 	"github.com/sausaging/hyper-pvzk/storage"
 )
 
-// @todo build cmd and build stratagies
-
 var _ chain.Action = (*RiscZero)(nil)
 
 type RiscZero struct {
