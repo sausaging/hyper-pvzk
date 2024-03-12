@@ -23,7 +23,7 @@ type txData struct {
 	Data         []byte
 }
 
-var chunkSize = 50
+var chunkSize = 10 * 1024
 
 var testingCmd = &cobra.Command{
 	Use: "testing",

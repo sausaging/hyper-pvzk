@@ -14,7 +14,8 @@
 ---
 - Custom block builder logic
 - Vryx Integeration
-- Deploy builder
+- Deploy builder ✅
+- RPC integration
 _[Who is Morpheus ("The Matrix")?](https://www.youtube.com/watch?v=zE7PKRjrid4)_
 
 The [`morpheusvm`](./examples/morpheusvm) provides the first glimpse into the world of the `hypersdk`.
