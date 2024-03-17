@@ -64,6 +64,9 @@ var registerCmd = &cobra.Command{
 		if !cont || err != nil {
 			return err
 		}
+		if chunkSize < int(totalBytes) {
+			chunkSize = int(totalBytes)
+		}
 		_, _, err = sendAndWait(ctx, nil, &actions.Register{
 			ImageID:    imageID,
 			ChunkSize:  uint64(chunkSize),
@@ -216,7 +219,7 @@ var verifyCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		verifyType, err := handler.Root().PromptInt("verification type: 1 -> SP1, 2 -> Miden, 3 -> Risc0", 10)
+		verifyType, err := handler.Root().PromptInt("verification type: 1 -> SP1, 2 -> Miden, 3 -> Risc0, 4 -> Gnark", 10)
 		if err != nil {
 			return err
 		}
@@ -258,6 +261,32 @@ var verifyCmd = &cobra.Command{
 				ProofValType:    uint64(valType),
 				RiscZeroImageID: riscZeroImageID,
 			}
+		} else if verifyType == 4 {
+			provingSystem, err := handler.Root().PromptBool("proving system: true -> groth16, false -> plonk")
+			if err != nil {
+				return err
+			}
+			curve, err := handler.Root().PromptInt("curve: 1 -> BN254, 2 -> BLS12_377,3 -> BLS12_378, 4 -> BLS12_381, 5 -> BLS24_315, 6 -> BLS24_317, 7 -> BW6_761, 8 -> BW6_633,9 -> BW6_756, 10 -> STARK_CURVE, 11 -> SECP256K1", 11)
+			if err != nil {
+				return err
+			}
+			pubWitValType, err := handler.Root().PromptInt("pub wit val type", int(consts.MaxUint16))
+			if err != nil {
+				return err
+			}
+			verificationValType, err := handler.Root().PromptInt("verification val type", int(consts.MaxUint16))
+			if err != nil {
+				return err
+			}
+			action = &actions.Gnark{
+				ImageID:             imageID,
+				ProvingSystem:       provingSystem,
+				Curve:               uint64(curve),
+				ProofValType:        uint64(valType),
+				PubWitValType:       uint64(pubWitValType),
+				VerificationValType: uint64(verificationValType),
+			}
+
 		} else {
 			return ErrInvalidVerificationType
 		}

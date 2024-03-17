@@ -15,6 +15,7 @@ import (
 	"github.com/ava-labs/hypersdk/codec"
 	"github.com/ava-labs/hypersdk/rpc"
 	"github.com/ava-labs/hypersdk/utils"
+	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/sausaging/hyper-pvzk/actions"
 	"github.com/sausaging/hyper-pvzk/consts"
 	brpc "github.com/sausaging/hyper-pvzk/rpc"
@@ -94,6 +95,14 @@ func handleTx(tx *chain.Transaction, result *chain.Result) {
 			summaryStr = fmt.Sprintf("successfully verified risc zero proof of image id: %s", action.ImageID.String())
 		case *actions.Miden:
 			summaryStr = fmt.Sprintf("successfully verified miden proof of image id: %s", action.ImageID.String())
+		case *actions.Gnark:
+			var ps string
+			if action.ProvingSystem {
+				ps = "groth16"
+			} else {
+				ps = "plonk"
+			}
+			summaryStr = fmt.Sprintf("Successfully Verified %s proof for %s curve, of image id %s", ps, ecc.ID(action.Curve).String(), action.ImageID.String())
 		}
 	}
 	utils.Outf(
