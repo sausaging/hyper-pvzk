@@ -92,7 +92,6 @@ func HandleSP1(
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal verify reply in HandleSP1: %w", err)
 		}
-		//@todo handle the casses where we could not submit for the server to verify
 	}
 	return nil
 }

@@ -64,7 +64,6 @@ func (r *Register) Execute(
 	txID ids.ID,
 	_ bool,
 ) (bool, uint64, []byte, *warp.UnsignedMessage, error) {
-	// @todo dummy initialisation
-	// should we store what type of proof system is meant to be used by the imageID(i.e. txID) generated??
+	// @todo should we store what type of proof system is meant to be used by the imageID(i.e. txID) generated??
 	return true, RegisterComputeUnits, nil, nil, nil
 }

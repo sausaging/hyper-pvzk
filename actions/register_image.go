@@ -18,7 +18,7 @@ var _ chain.Action = (*RegisterImage)(nil)
 type RegisterImage struct {
 	ImageID  ids.ID `json:"image_id"`
 	ValType  uint64 `json:"val_type"`  // 1 for elf, 1 + for proofs
-	RootHash string `json:"root_hash"` // root hash of the image --> should we use keccak for this?? @todo
+	RootHash string `json:"root_hash"` // root hash of the image --> which hash function should be used?
 }
 
 func (*RegisterImage) GetTypeID() uint8 {

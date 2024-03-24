@@ -94,9 +94,6 @@ func (t *Trustless) ListenActions(txID ids.ID, timeOut uint64 /*any further data
 }
 
 func (t *Trustless) ListenResults() {
-	// server endpoint listening for tx results
-	// create server
-	// create endpoint
 	r := mux.NewRouter()
 
 	r.HandleFunc("/ping", t.ping).Methods("GET")
@@ -126,7 +123,6 @@ func (t *Trustless) submitResult(w http.ResponseWriter, r *http.Request) {
 	t.l.Lock()
 	t.verifiedActions[id] = req.IsValid
 	t.l.Unlock()
-	// @todo should we handle all things here? or delegate to run?
 	// @todo should we return any response??
 	msg := actions.GetMessage(id, req.IsValid)
 	unSigMsg, err := warp.NewUnsignedMessage(t.rules(0).NetworkID(), t.rules(0).ChainID(), msg)

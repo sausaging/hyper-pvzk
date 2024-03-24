@@ -19,8 +19,6 @@ import (
 	"github.com/sausaging/hyper-pvzk/storage"
 )
 
-//@todo validators vote
-
 var _ chain.Action = (*ValidatorVote)(nil)
 
 type ValidatorVote struct {
