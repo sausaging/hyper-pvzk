@@ -6,7 +6,6 @@ package vm
 import (
 	"github.com/ava-labs/avalanchego/utils/logging"
 	"github.com/ava-labs/avalanchego/vms"
-
 	"github.com/sausaging/hyper-pvzk/controller"
 )
 

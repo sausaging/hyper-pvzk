@@ -15,7 +15,6 @@ import (
 	"github.com/ava-labs/hypersdk/codec"
 	"github.com/ava-labs/hypersdk/rpc"
 	"github.com/ava-labs/hypersdk/utils"
-	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/sausaging/hyper-pvzk/actions"
 	"github.com/sausaging/hyper-pvzk/consts"
 	brpc "github.com/sausaging/hyper-pvzk/rpc"
@@ -58,25 +57,6 @@ func sendAndWait(
 	return result.Success, tx.ID(), nil
 }
 
-func send(ctx context.Context, warpMsg *warp.Message, action chain.Action, cli *rpc.JSONRPCClient,
-	bcli *brpc.JSONRPCClient, ws *rpc.WebSocketClient, factory chain.AuthFactory,
-) (ids.ID, error) { //nolint:unparam
-	parser, err := bcli.Parser(ctx)
-	if err != nil {
-		return ids.Empty, err
-	}
-	f, tx, _, err := cli.GenerateTransaction(ctx, parser, warpMsg, action, factory)
-	if err != nil {
-		return ids.Empty, err
-	}
-	if err := f(ctx); err != nil {
-		utils.Outf("Error submitting Tx")
-		return ids.Empty, nil
-	}
-	utils.Outf("{{yellow}}Submited txID:{{/}} %s {{yellow}}to mempool{{/}}\n", tx.ID())
-	return tx.ID(), nil
-}
-
 func handleTx(tx *chain.Transaction, result *chain.Result) {
 	summaryStr := string(result.Output)
 	actor := tx.Auth.Actor()
@@ -86,23 +66,20 @@ func handleTx(tx *chain.Transaction, result *chain.Result) {
 		switch action := tx.Action.(type) { //nolint:gocritic
 		case *actions.Transfer:
 			summaryStr = fmt.Sprintf("%s %s -> %s", utils.FormatBalance(action.Value, consts.Decimals), consts.Symbol, codec.MustAddressBech32(consts.HRP, action.To))
-		case *actions.Deploy:
-			summaryStr =
-				fmt.Sprintf("added chunk with index: %d", action.ChunkIndex)
 		case *actions.SP1:
 			summaryStr = fmt.Sprintf("successfully verified sp1 proof of image id: %s", action.ImageID.String())
 		case *actions.RiscZero:
 			summaryStr = fmt.Sprintf("successfully verified risc zero proof of image id: %s", action.ImageID.String())
 		case *actions.Miden:
 			summaryStr = fmt.Sprintf("successfully verified miden proof of image id: %s", action.ImageID.String())
-		case *actions.Gnark:
-			var ps string
-			if action.ProvingSystem {
-				ps = "groth16"
-			} else {
-				ps = "plonk"
-			}
-			summaryStr = fmt.Sprintf("Successfully Verified %s proof for %s curve, of image id %s", ps, ecc.ID(action.Curve).String(), action.ImageID.String())
+			// case *actions.Gnark:
+			// 	var ps string
+			// 	if action.ProvingSystem {
+			// 		ps = "groth16"
+			// 	} else {
+			// 		ps = "plonk"
+			// 	}
+			// 	summaryStr = fmt.Sprintf("Successfully Verified %s proof for %s curve, of image id %s", ps, ecc.ID(action.Curve).String(), action.ImageID.String())
 		}
 	}
 	utils.Outf(

@@ -58,6 +58,7 @@ type Config struct {
 	TestMode          bool          `json:"testMode"` // makes gossip/building manual
 	LogLevel          logging.Level `json:"logLevel"`
 	HubPorturi        string        `json:"hubPorturi"`
+	ValPrivKey        string        `json:"valPrivKey"`
 	// State Sync
 	StateSyncServerDelay time.Duration `json:"stateSyncServerDelay"` // for testing
 
@@ -65,6 +66,8 @@ type Config struct {
 	nodeID               ids.NodeID
 	parsedExemptSponsors []codec.Address
 	Client               *requester.EndpointRequester
+	Port                 string // rust endpoint to send verify requests
+	ListenerPort         string // go endpoint to listen for verify results from rust endpoint
 }
 
 func New(nodeID ids.NodeID, b []byte) (*Config, error) {
@@ -92,11 +95,20 @@ func New(nodeID ids.NodeID, b []byte) (*Config, error) {
 		return nil, fmt.Errorf("hub port not provided")
 	}
 
-	c.Client = requester.New(c.HubPorturi)
-	success, err := requester.Ping(c.Client)
+	success, rustPort, unintPort, err := requester.Ping(requester.New(c.HubPorturi))
 	if err != nil || !success /*lol*/ {
+		return nil, fmt.Errorf("%s: can't Ping Hub", err)
+	}
+
+	c.Client = requester.New(rustPort)
+
+	success, err = requester.PingSingle(c.Client)
+	if err != nil || !success {
 		return nil, fmt.Errorf("%s: can't Ping Server", err)
 	}
+
+	c.Port = rustPort
+	c.ListenerPort = unintPort
 
 	return c, nil
 }

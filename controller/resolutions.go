@@ -41,5 +41,16 @@ func (c *Controller) GetBalanceFromState(
 	return storage.GetBalanceFromState(ctx, c.inner.ReadState, acct)
 }
 
-//@todo abstract json rpc server and ws server from controller
-// and integrate them for individual commands and stratagies
+func (c *Controller) GetVerifyStatusFromState(
+	ctx context.Context,
+	txID ids.ID,
+) (bool, error) {
+	return storage.GetVerifyStatusFromState(ctx, c.inner.ReadState, txID)
+}
+
+// func (c *Controller) GetValidaorVoteFromState(
+// 	ctx context.Context,
+// 	txID ids.ID,
+// 	actor codec.Address,
+// ) (bool, error) {
+// }

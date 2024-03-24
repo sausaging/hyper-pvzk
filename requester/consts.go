@@ -5,6 +5,7 @@ const (
 	RISCZEROENDPOINT = "/risc0-verify"
 	MIDENENDPOINT    = "/miden-verify"
 	PINGENDPOINT     = "/ping"
+	VERIFYENDPOINT   = "/verify"
 )
 
 const (

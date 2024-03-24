@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/ids"
@@ -50,9 +51,17 @@ const (
 	outgoingWarpPrefix = 0x5
 	registerPrefix     = 0x6
 	deployPrefix       = 0x7
+	timeOutPrefix      = 0x8
+	weightPrefix       = 0x9
+	statusPreifx       = 0xa
+	votePrefix         = 0xb
 )
 
-const BalanceChunks uint16 = 1
+const (
+	BalanceChunks uint16 = 1
+	HashChunksMax uint16 = 10
+	TimeOutChunks uint16 = 1
+)
 
 // const registerChunks uint16 = consts.MaxUint16
 
@@ -285,20 +294,6 @@ func ChunkKey(imageID ids.ID, registerType uint16) (k []byte) {
 	return k
 }
 
-func StoreRegistration(
-	ctx context.Context,
-	mu state.Mutable,
-	imageID ids.ID,
-	registerType uint16,
-	chunkSize uint16,
-	totalBytes uint64,
-) error {
-	key := ChunkKey(imageID, registerType)
-	data := binary.BigEndian.AppendUint16([]byte{}, chunkSize)
-	data = binary.BigEndian.AppendUint64(data, totalBytes)
-	return mu.Insert(ctx, key, data)
-}
-
 func GetRegistration(
 	ctx context.Context,
 	im state.Immutable,
@@ -315,62 +310,185 @@ func GetRegistration(
 	return chunkSize, totalBytes, nil
 }
 
-func DeployKey(txID ids.ID, valType uint16) (k []byte) {
+func HashKey(txID ids.ID, valType uint16) (k []byte) {
 	k = make([]byte, 1+consts.IDLen+consts.Uint16Len+consts.Uint16Len)
 	k[0] = deployPrefix
 	copy(k[1:], txID[:])
 	binary.BigEndian.PutUint16(k[1+consts.IDLen:], valType)
-	binary.BigEndian.PutUint16(k[1+consts.IDLen+consts.Uint16Len:], consts.MaxUint16)
+	binary.BigEndian.PutUint16(k[1+consts.IDLen+consts.Uint16Len:], HashChunksMax)
 	return k
 }
 
-// @todo get better chunk builder strategy
-func StoreDeployType(
+func StoreHashKeyType(
 	ctx context.Context,
 	mu state.Mutable,
 	imageID ids.ID,
 	valType uint16,
-	data []byte,
-	chunkIndex uint16,
-	chunkSize uint16,
+	data []byte, // string is casted into []byte
 ) error {
-	k := DeployKey(imageID, valType)
-	val, err := mu.GetValue(ctx, k)
-	if err != nil {
-		return err
-	}
-	chunkIndex = chunkIndex - 1
-	start := uint64(chunkIndex) * uint64(chunkSize)
-	totalChunks := (uint64(len(val)) + uint64(chunkSize) - 1) / uint64(chunkSize) // Include the last chunk
-	if uint64(chunkIndex) > totalChunks {
-		return fmt.Errorf("chunk index out of range, total chunks: %d, chunk index: %d", totalChunks, chunkIndex)
-	}
-	end := uint64((chunkIndex + 1)) * uint64(chunkSize)
-	if end > uint64(len(val)) {
-		end = uint64(len(val))
-	}
-	dataA := append(data, val[end:]...)
-	val = append(val[:start], dataA...)
-	return mu.Insert(ctx, k, val)
+	k := HashKey(imageID, valType)
+	return mu.Insert(ctx, k, data)
 }
 
-func InitiateDeployType(
-	ctx context.Context,
-	mu state.Mutable,
-	imageID ids.ID,
-	valType uint16,
-	initiationBytes []byte,
-) error {
-	k := DeployKey(imageID, valType)
-	return mu.Insert(ctx, k, initiationBytes)
-}
+// func InitiateDeployType(
+// 	ctx context.Context,
+// 	mu state.Mutable,
+// 	imageID ids.ID,
+// 	valType uint16,
+// 	initiationBytes []byte,
+// ) error {
+// 	k := DeployKey(imageID, valType)
+// 	return mu.Insert(ctx, k, initiationBytes)
+// }
 
-func GetDeployType(
+func GetHashKeyType(
 	ctx context.Context,
 	im state.Immutable,
 	imageID ids.ID,
 	valType uint16,
 ) ([]byte, error) {
-	k := DeployKey(imageID, valType)
+	k := HashKey(imageID, valType)
 	return im.GetValue(ctx, k)
+}
+
+func DeployKey(
+	imageID ids.ID,
+	proofValType uint16,
+) string {
+	return strconv.Itoa(int(deployPrefix)) + imageID.Hex() + strconv.Itoa(int(proofValType)) + ".pvalt"
+}
+
+func TimeOutKey(
+	txID ids.ID,
+) (k []byte) {
+	k = make([]byte, 1+consts.IDLen+consts.Uint16Len)
+	k[0] = timeOutPrefix
+	copy(k[1:], txID[:])
+	binary.BigEndian.PutUint16(k[1+consts.IDLen:], TimeOutChunks)
+	return
+}
+
+func WeightKey(
+	txID ids.ID,
+) (k []byte) {
+	k = make([]byte, 1+consts.IDLen+consts.Uint16Len)
+	k[0] = weightPrefix
+	copy(k[1:], txID[:])
+	binary.BigEndian.PutUint16(k[1+consts.IDLen:], TimeOutChunks)
+	// max weight don't cross uint64. 1 chunk = 64 bytes
+	return k
+}
+
+func StatusKey(
+	txID ids.ID,
+) (k []byte) {
+	k = make([]byte, 1+consts.IDLen+consts.Uint16Len)
+	k[0] = statusPreifx
+	copy(k[1:], txID[:])
+	binary.BigEndian.PutUint16(k[1+consts.IDLen:], TimeOutChunks) // bool is a single byte
+	return k
+}
+
+func VoteKey(
+	txID ids.ID,
+	actor codec.Address,
+) (k []byte) {
+	k = make([]byte, 1+consts.IDLen+codec.AddressLen+consts.Uint16Len)
+	k[0] = votePrefix
+	copy(k[1:], txID[:])
+	copy(k[1+consts.IDLen:], actor[:])
+	binary.BigEndian.PutUint16(k[1+consts.IDLen+codec.AddressLen:], TimeOutChunks) // bool is a single byte
+	return k
+}
+
+func StoreTimeOut(
+	ctx context.Context,
+	mu state.Mutable,
+	txID ids.ID,
+	timeOut uint64,
+	timeStamp int64,
+) error {
+	k := TimeOutKey(txID)
+	if timeOut < 20 {
+		timeOut = 20
+	}
+	if timeOut > 300 {
+		timeOut = 300
+	}
+	return mu.Insert(ctx, k, binary.BigEndian.AppendUint64(nil, uint64(timeStamp+int64(timeOut)*1000)))
+}
+
+func GetTimeOut(
+	ctx context.Context,
+	im state.Immutable,
+	txID ids.ID,
+) (int64, error) {
+	k := TimeOutKey(txID)
+	val, err := im.GetValue(ctx, k)
+	if err != nil {
+		return 0, err
+	}
+	return int64(binary.BigEndian.Uint64(val)), nil
+}
+
+func UpdateWeight(
+	ctx context.Context,
+	mu state.Mutable,
+	txID ids.ID,
+	weight uint64,
+	totalWeight uint64,
+) error { // @todo refactor the logic
+	k := WeightKey(txID)
+	val, err := mu.GetValue(ctx, k)
+	if errors.Is(err, database.ErrNotFound) {
+		return mu.Insert(ctx, k, binary.BigEndian.AppendUint64(nil, weight))
+	} else {
+		vW := binary.BigEndian.Uint64(val)
+		nW := vW + weight
+		if nW > totalWeight {
+			sK := StatusKey(txID)
+			mu.Insert(ctx, sK, binary.BigEndian.AppendUint16(nil, 1))
+		}
+		return mu.Insert(ctx, k, binary.BigEndian.AppendUint64(nil, nW))
+	}
+}
+
+func GetVerifyStatusFromState(
+	ctx context.Context,
+	f ReadState,
+	txID ids.ID,
+) (bool, error) {
+	k := StatusKey(txID)
+	values, errs := f(ctx, [][]byte{k})
+	if errs[0] != nil {
+		return false, errs[0]
+	}
+	return binary.BigEndian.Uint16(values[0]) == 1, nil
+}
+
+func GetVote(
+	ctx context.Context,
+	im state.Immutable,
+	txID ids.ID,
+	actor codec.Address,
+) error {
+	k := VoteKey(txID, actor)
+	v, err := im.GetValue(ctx, k)
+	if errors.Is(err, database.ErrNotFound) {
+		return nil
+	}
+	if binary.BigEndian.Uint16(v) == 1 {
+		return ErrAlreadyVoted
+	}
+	return err
+}
+
+func StoreVote(
+	ctx context.Context,
+	mu state.Mutable,
+	txID ids.ID,
+	actor codec.Address,
+) error {
+	k := VoteKey(txID, actor)
+	return mu.Insert(ctx, k, binary.BigEndian.AppendUint16(nil, 1))
 }

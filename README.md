@@ -16,17 +16,20 @@
 - Vryx Integeration
 - Deploy builder ✅
 - RPC integration
-
+- How are validators compensated for transfering proofs over p2p?
+- Why should validators store the proofs?
+- To incentivize validators storing proofs, keep a activation limit, where validators receive results for actively voting over proof verifications.
+- Min timeout is 10 blocks and max timeout is 300 blocks -> check introduced in storeTimeOut
 <p align="center">
   <img width="90%" alt="sausage" src="assets/sausage.jpg">
 </p>
 
 <p align="center">
-  <img width="90%" alt="sausage lang org" src="assets/sausage_ls.jpg">
+  <img width="90%" alt="sausage proving systems and vms" src="assets/sausage_pv.jpg">
 </p>
 
 <p align="center">
-  <img width="90%" alt="sausage proving systems and vms" src="assets/sausage_pv.jpg">
+  <img width="90%" alt="sausage lang org" src="assets/sausage_ls.jpg">
 </p>
 
 _[Who is Morpheus ("The Matrix")?](https://www.youtube.com/watch?v=zE7PKRjrid4)_

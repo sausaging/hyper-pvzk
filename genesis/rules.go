@@ -4,7 +4,10 @@
 package genesis
 
 import (
+	"context"
+
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/snow/validators"
 	"github.com/ava-labs/hypersdk/chain"
 	"github.com/ava-labs/hypersdk/fees"
 	"github.com/sausaging/hyper-pvzk/requester"
@@ -19,11 +22,18 @@ type Rules struct {
 	networkID uint32
 	chainID   ids.ID
 	client    *requester.EndpointRequester
+	f         func(ctx context.Context) (map[ids.NodeID]*validators.GetValidatorOutput, map[string]struct{})
 }
 
 // TODO: use upgradeBytes
-func (g *Genesis) Rules(_ int64, networkID uint32, chainID ids.ID, client *requester.EndpointRequester) *Rules {
-	return &Rules{g, networkID, chainID, client}
+func (g *Genesis) Rules(
+	_ int64,
+	networkID uint32,
+	chainID ids.ID,
+	client *requester.EndpointRequester,
+	f func(ctx context.Context) (map[ids.NodeID]*validators.GetValidatorOutput, map[string]struct{}),
+) *Rules {
+	return &Rules{g, networkID, chainID, client, f}
 }
 
 func (*Rules) GetWarpConfig(ids.ID) (bool, uint64, uint64) {
@@ -111,5 +121,5 @@ func (r *Rules) GetWindowTargetUnits() fees.Dimensions {
 }
 
 func (r *Rules) FetchCustom(string) (any, bool) {
-	return r.client, true
+	return r.f, true
 }

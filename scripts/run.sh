@@ -23,7 +23,7 @@ MODE=${MODE:-run}
 AGO_LOGLEVEL=${AGO_LOGLEVEL:-info}
 LOGLEVEL=${LOGLEVEL:-info}
 STATESYNC_DELAY=${STATESYNC_DELAY:-0}
-MIN_BLOCK_GAP=${MIN_BLOCK_GAP:-15_000}
+MIN_BLOCK_GAP=${MIN_BLOCK_GAP:-5_000}
 STORE_TXS=${STORE_TXS:-true}
 UNLIMITED_USAGE=${UNLIMITED_USAGE:-true}
 ADDRESS=${ADDRESS:-morpheus1qrzvk4zlwj9zsacqgtufx7zvapd3quufqpxk5rsdd4633m4wz2fdjk97rwu}
@@ -105,8 +105,8 @@ go build \
 -o "${TMPDIR}"/avalanchego-"${VERSION}"/plugins/qCNyZHrs3rZX458wPJXPJJypPf6w423A84jnfbdP2TPEmEE9u \
 ./cmd/morpheusvm
 
-echo "building morpheus-cli"
-go build -v -o "${TMPDIR}"/morpheus-cli ./cmd/morpheus-cli
+# echo "building morpheus-cli"
+# go build -v -o "${TMPDIR}"/morpheus-cli ./cmd/morpheus-cli
 
 # log everything in the avalanchego directory
 find "${TMPDIR}"/avalanchego-"${VERSION}"
@@ -163,6 +163,7 @@ cat <<EOF > "${TMPDIR}"/morpheusvm.config
   "continuousProfilerDir":"${TMPDIR}/morpheusvm-e2e-profiles/*",
   "stateSyncServerDelay": ${STATESYNC_DELAY},
   "hubPorturi": "${HUB_PORT}"
+  "valPrivKey": 323b1d8f4eed5f0da9da93071b034f2dce9d2d22692c172f3cb252a64ddfafd01b057de320297c29ad0c1f589ea216869cf1938d88c9fbd70d6748323dbf2fa7
 }
 EOF
 mkdir -p "${TMPDIR}"/morpheusvm-e2e-profiles

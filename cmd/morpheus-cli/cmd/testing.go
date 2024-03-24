@@ -2,13 +2,9 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
-	"io/ioutil"
 	"log"
 	"os"
-	"time"
 
-	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/hypersdk/chain"
 	"github.com/ava-labs/hypersdk/consts"
 	"github.com/ava-labs/hypersdk/utils"
@@ -16,14 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type txData struct {
-	ImageID      ids.ID
-	ProofValType uint64
-	ChunkIndex   uint64
-	Data         []byte
-}
-
-var chunkSize = 10 * 1024
+// var chunkSize = 10 * 1024
 
 var testingCmd = &cobra.Command{
 	Use: "testing",
@@ -39,63 +28,38 @@ var registerCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		imageID, err := handler.Root().PromptID("image id")
+		ps, err := handler.Root().PromptInt("proving sytem: sp1 -> 0, risc0 -> 1, miden -> 2, gnark -> 3 ", consts.MaxInt)
 		if err != nil {
 			return err
 		}
-		// chunkSize, err := handler.Root().PromptInt("chunk size", int(consts.MaxUint16))
-		// if err != nil {
-		// 	return err
-		// }
-		valType, err := handler.Root().PromptInt("val type(1 for ELF, rest for proofs)", int(consts.MaxUint16))
-		if err != nil {
-			return err
-		}
-		filePath, err := handler.Root().PromptString("file path to register total bytes", 1, consts.MaxInt)
-		if err != nil {
-			return err
-		}
-		code, err := ioutil.ReadFile(filePath)
-		if err != nil {
-			return err
-		}
-		totalBytes := uint64(len(code))
 		cont, err := handler.Root().PromptContinue()
 		if !cont || err != nil {
 			return err
 		}
-		if chunkSize < int(totalBytes) {
-			chunkSize = int(totalBytes)
-		}
 		_, _, err = sendAndWait(ctx, nil, &actions.Register{
-			ImageID:    imageID,
-			ChunkSize:  uint64(chunkSize),
-			ValType:    uint64(valType),
-			TotalBytes: totalBytes,
+			ProovingSystem: uint64(ps),
 		}, cli, bcli, ws, factory, true)
 		return err
 	},
 }
 
-var deployCmd = &cobra.Command{
-	Use: "deploy",
+var registerImageCmd = &cobra.Command{
+	Use: "register-image",
 	RunE: func(*cobra.Command, []string) error {
-
 		ctx := context.Background()
 		_, _, factory, cli, bcli, ws, err := handler.DefaultActor()
-		// go listenAndRetry(ws, bcli, cli, factory)
 		if err != nil {
 			return err
 		}
 		imageID, err := handler.Root().PromptID("image id")
 		if err != nil {
-			return err
+			return nil
 		}
 		valType, err := handler.Root().PromptInt("proof val type(1 for ELF, rest for proofs)", int(consts.MaxUint16))
 		if err != nil {
 			return err
 		}
-		filePath, err := handler.Root().PromptString("file path to deploy", 1, consts.MaxInt)
+		rootHash, err := handler.Root().PromptString("root hash", 1, consts.MaxInt)
 		if err != nil {
 			return err
 		}
@@ -103,106 +67,43 @@ var deployCmd = &cobra.Command{
 		if !cont || err != nil {
 			return err
 		}
-		code, err := ioutil.ReadFile(filePath)
-		if err != nil {
-			return err
-		}
-		totalChunks := (len(code) + chunkSize - 1) / chunkSize // Include the last chunk
-		for chunkIndex := 0; chunkIndex < totalChunks; chunkIndex++ {
-			start := uint64(chunkIndex) * uint64(chunkSize)
-			end := (chunkIndex + 1) * chunkSize
-			if end > len(code) {
-				end = len(code)
-			}
-			txID, err := send(ctx, nil, &actions.Deploy{
-				ImageID:      imageID,
-				ProofvalType: uint64(valType),
-				Data:         code[start:end],
-				ChunkIndex:   uint64(chunkIndex + 1), // figure out why parser fails when chunkIndex is 0?
-			}, cli, bcli, ws, factory)
-			if err != nil {
-				return err
-			}
-			WriteToJson(txData{
-				ImageID:      imageID,
-				ProofValType: uint64(valType),
-				ChunkIndex:   uint64(chunkIndex),
-				Data:         code[start:end],
-			}, txID)
-
-			utils.Outf("{{yellow}} sent chunk %d{{/}}\n{{green}} offset: %d, file size: %d{{/}}\n", chunkIndex+1, end, len(code))
-			if chunkIndex%25 == 0 && chunkIndex != 0 {
-				time.Sleep(15 * time.Second)
-			}
-		}
-
+		_, _, err = sendAndWait(ctx, nil, &actions.RegisterImage{
+			ImageID:  imageID,
+			ValType:  uint64(valType),
+			RootHash: rootHash,
+		}, cli, bcli, ws, factory, true)
 		return err
 	},
 }
 
-var retryDeployCmd = &cobra.Command{
-	Use: "retry",
+var broadcastCmd = &cobra.Command{
+	Use: "broadcast",
 	RunE: func(*cobra.Command, []string) error {
 		ctx := context.Background()
-		fileName := "./data.json"
-		_, _, factory, cli, bcli, ws, err := handler.DefaultActor()
+		_, _, _, _, bcli, _, err := handler.DefaultActor()
 		if err != nil {
 			return err
 		}
+		fileName, err := handler.Root().PromptString("file name", 1, consts.MaxInt)
+		if err != nil {
+			return err
+		}
+		cont, err := handler.Root().PromptContinue()
+		if !cont || err != nil {
+			return err
+		}
+		// Read the existing data from the file
 		data, err := os.ReadFile(fileName)
 		if err != nil {
 			log.Fatal("Error reading file:", err)
 		}
-		arr := make([]ids.ID, 0)
-		var jsonData map[string]txData
-		if err := json.Unmarshal(data, &jsonData); err != nil {
-			// Handle potential errors if the file is empty or invalid JSON
-			jsonData = make(map[string]txData)
-		}
-		for txID, txDa := range jsonData {
-			txID, err := ids.FromString(txID)
-			if err != nil {
-				return err
-			}
-			// txDa2 := txDa.(txData)
-			contains, success, _, _, err := bcli.Tx(ctx, txID)
-			if err != nil {
-				return err
-			}
-
-			if contains && success {
-				arr = append(arr, txID)
-			} else {
-
-				utils.Outf("{{yellow}}retrying tx:{{/}} %s, contains: %t, success: %t, {{cyan}}chunk: %d{{/}}\n", txID, contains, success, txDa.ChunkIndex)
-				txID2, _ := send(ctx, nil, &actions.Deploy{
-					ImageID:      txDa.ImageID,
-					ProofvalType: txDa.ProofValType,
-					ChunkIndex:   txDa.ChunkIndex + 1,
-					Data:         txDa.Data,
-				}, cli, bcli, ws, factory)
-				arr = append(arr, txID)
-				jsonData[txID2.String()] = txDa
-			}
-		}
-		for _, i := range arr {
-			delete(jsonData, i.String())
-		}
-
-		newData, err := json.MarshalIndent(jsonData, "", "  ")
-		if err != nil {
-			utils.Outf("{{red}}error marshalling data: %s{{/}}\n", err)
-		}
-
-		// Write the updated JSON data back to the file
-		err = os.WriteFile(fileName, newData, 0644)
-		if err != nil {
-			utils.Outf("{{red}}error writing to file: %s{{/}}\n", err)
-		}
-		return err
+		// @todo we are naive broadcasting full file. change this to 100kib blob based broadcast
+		bcli.Broadcast(ctx, data)
+		return nil
 	},
 }
 
+// the data refered for get verification will be associated with this txID
 var verifyCmd = &cobra.Command{
 	Use: "verify",
 	RunE: func(*cobra.Command, []string) error {
@@ -223,11 +124,16 @@ var verifyCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		timeOutBlocks, err := handler.Root().PromptInt("time out blocks", int(consts.MaxUint16))
+		if err != nil {
+			return err
+		}
 		var action chain.Action
 		if verifyType == 1 {
 			action = &actions.SP1{
-				ImageID:      imageID,
-				ProofValType: uint64(valType),
+				ImageID:       imageID,
+				ProofValType:  uint64(valType),
+				TimeOutBlocks: uint64(timeOutBlocks),
 			}
 		} else if verifyType == 2 {
 			codeFrontEnd, err := handler.Root().PromptString("codeFrontEnd", 1, consts.MaxInt)
@@ -248,6 +154,7 @@ var verifyCmd = &cobra.Command{
 				CodeFrontEnd:    codeFrontEnd,
 				InputsFrontEnd:  inputsFrontEnd,
 				OutputsFrontEnd: outputsFrontEnd,
+				TimeOutBlocks:   uint64(timeOutBlocks),
 			}
 
 		} else if verifyType == 3 {
@@ -260,32 +167,9 @@ var verifyCmd = &cobra.Command{
 				ImageID:         imageID,
 				ProofValType:    uint64(valType),
 				RiscZeroImageID: riscZeroImageID,
+				TimeOutBlocks:   uint64(timeOutBlocks),
 			}
 		} else if verifyType == 4 {
-			provingSystem, err := handler.Root().PromptBool("proving system: true -> groth16, false -> plonk")
-			if err != nil {
-				return err
-			}
-			curve, err := handler.Root().PromptInt("curve: 1 -> BN254, 2 -> BLS12_377,3 -> BLS12_378, 4 -> BLS12_381, 5 -> BLS24_315, 6 -> BLS24_317, 7 -> BW6_761, 8 -> BW6_633,9 -> BW6_756, 10 -> STARK_CURVE, 11 -> SECP256K1", 11)
-			if err != nil {
-				return err
-			}
-			pubWitValType, err := handler.Root().PromptInt("pub wit val type", int(consts.MaxUint16))
-			if err != nil {
-				return err
-			}
-			verificationValType, err := handler.Root().PromptInt("verification val type", int(consts.MaxUint16))
-			if err != nil {
-				return err
-			}
-			action = &actions.Gnark{
-				ImageID:             imageID,
-				ProvingSystem:       provingSystem,
-				Curve:               uint64(curve),
-				ProofValType:        uint64(valType),
-				PubWitValType:       uint64(pubWitValType),
-				VerificationValType: uint64(verificationValType),
-			}
 
 		} else {
 			return ErrInvalidVerificationType
@@ -300,80 +184,27 @@ var verifyCmd = &cobra.Command{
 	},
 }
 
-func WriteToJson(obj txData, txID ids.ID) {
-	fileName := "./data.json"
-
-	// Read the existing data from the file
-	data, err := os.ReadFile(fileName)
-	if err != nil {
-		log.Fatal("Error reading file:", err)
-	}
-	var jsonData map[string]interface{}
-	if err := json.Unmarshal(data, &jsonData); err != nil {
-		// Handle potential errors if the file is empty or invalid JSON
-		jsonData = make(map[string]interface{})
-	}
-	jsonData[txID.String()] = obj
-	newData, err := json.MarshalIndent(jsonData, "", "  ")
-	if err != nil {
-		log.Fatal("Error marshalling data:", err)
-	}
-
-	// Write the updated JSON data back to the file
-	err = ioutil.WriteFile(fileName, newData, 0644)
-	if err != nil {
-		log.Fatal("Error writing to file:", err)
-	}
-
-	// log.Println("Successfully added object to", fileName)
+var verifyStatusCmd = &cobra.Command{
+	Use: "verify-status",
+	RunE: func(*cobra.Command, []string) error {
+		ctx := context.Background()
+		_, _, _, _, bcli, _, err := handler.DefaultActor()
+		if err != nil {
+			return err
+		}
+		txID, err := handler.Root().PromptID("tx id of verify")
+		if err != nil {
+			return err
+		}
+		cont, err := handler.Root().PromptContinue()
+		if !cont || err != nil {
+			return err
+		}
+		status, err := bcli.VerifyStatus(ctx, txID)
+		if err != nil {
+			return err
+		}
+		utils.Outf("status: %s", status)
+		return nil
+	},
 }
-
-// func listenAndRetry(ws *rpc.WebSocketClient, bcli *brpc.JSONRPCClient, cli *rpc.JSONRPCClient, factory chain.AuthFactory) {
-// 	ctx := context.Background()
-// 	ws.RegisterBlocks()
-// 	pendingTxs := make(map[ids.ID]txData)
-// 	p, _ := bcli.Parser(context.TODO())
-// 	utils.Outf("{{yellow}}listening for blocks{{/}}\n")
-// 	for {
-// 		txD := <-status
-// 		pendingTxs[txD.txID] = txD.txD
-// 		utils.Outf("{{yellow}}pending txs:{{/}} %d\n", len(pendingTxs))
-// 		blk, result, _, err := ws.ListenBlock(ctx, p)
-// 		if err != nil {
-// 			utils.Outf("{{red}} error listening block: %s{{/}}\n", err)
-// 		}
-// 		for i, tx := range blk.Txs {
-// 			for txID, txdata := range pendingTxs {
-// 				if txID == tx.ID() {
-// 					if result[i].Success {
-// 						utils.Outf("{{green}}tx %s succeeded{{/}}\n", txID)
-// 						delete(pendingTxs, txID)
-// 					} else {
-// 						utils.Outf("{{red}}tx %s failed, retrying{{/}}\n", txID)
-// 						delete(pendingTxs, txID)
-// 						txID, err := send(ctx, nil, &actions.Deploy{
-// 							ImageID:      txdata.ImageID,
-// 							ProofvalType: txdata.ProofValType,
-// 							ChunkIndex:   txdata.ChunkIndex,
-// 							Data:         txdata.Data,
-// 						}, cli, bcli, ws, factory)
-// 						if err != nil {
-// 							utils.Outf("{{red}}%s{{/}}\n", err)
-// 						} else {
-// 							pendingTxs[txID] = txData{
-// 								ImageID:      txdata.ImageID,
-// 								ProofValType: txdata.ProofValType,
-// 								ChunkIndex:   txdata.ChunkIndex,
-// 								Data:         txdata.Data,
-// 							}
-
-// 						}
-// 					}
-// 				}
-// 			}
-
-// 		}
-
-// 		// utils.Outf("{{yellow}}skipping unexpected transaction:{{/}} %s\n", tx.ID())
-// 	}
-// }

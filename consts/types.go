@@ -5,13 +5,16 @@ package consts
 
 const (
 	// Action TypeIDs
-	TransferID uint8 = 0
-	RegisterID uint8 = 1
-	SP1ID      uint8 = 2
-	MidenID    uint8 = 3
-	DeployID   uint8 = 4
-	RiscZeroID uint8 = 5
-	GnarkID    uint8 = 6
+	TransferID      uint8 = 0
+	RegisterID      uint8 = 1
+	RegisterImageID uint8 = 2
+	ValidatorVote   uint8 = 3
+	// proving systems TypeIDs
+	SP1ID      uint8 = 4
+	MidenID    uint8 = 5
+	RiscZeroID uint8 = 6
+	GnarkID    uint8 = 7
+
 	// Auth TypeIDs
 	ED25519ID   uint8 = 0
 	SECP256R1ID uint8 = 1

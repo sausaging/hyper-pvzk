@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/snow/validators"
 
 	"github.com/ava-labs/hypersdk/chain"
 	"github.com/ava-labs/hypersdk/requester"
@@ -87,6 +88,26 @@ func (cli *JSONRPCClient) Balance(ctx context.Context, addr string) (uint64, err
 	return resp.Amount, err
 }
 
+func (cli *JSONRPCClient) Broadcast(ctx context.Context, data []byte) error {
+	return cli.requester.SendRequest(
+		ctx,
+		"broadcast",
+		&data,
+		new(struct{}),
+	)
+}
+
+func (cli *JSONRPCClient) VerifyStatus(ctx context.Context, id ids.ID) (bool, error) {
+	resp := new(VerifyStatusReply)
+	err := cli.requester.SendRequest(
+		ctx,
+		"verifyStatus",
+		&VerifyStatusArgs{TxID: id},
+		resp,
+	)
+	return resp.Status, err
+}
+
 func (cli *JSONRPCClient) WaitForBalance(
 	ctx context.Context,
 	addr string,
@@ -140,7 +161,14 @@ func (p *Parser) ChainID() ids.ID {
 
 func (p *Parser) Rules(t int64) chain.Rules {
 	r := req.New("")
-	return p.genesis.Rules(t, p.networkID, p.chainID, r)
+	return p.genesis.Rules(
+		t,
+		p.networkID,
+		p.chainID,
+		r,
+		func(ctx context.Context) (map[ids.NodeID]*validators.GetValidatorOutput, map[string]struct{}) {
+			return map[ids.NodeID]*validators.GetValidatorOutput{}, map[string]struct{}{}
+		})
 }
 
 func (*Parser) Registry() (chain.ActionRegistry, chain.AuthRegistry) {

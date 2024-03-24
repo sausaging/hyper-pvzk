@@ -83,3 +83,23 @@ func (j *JSONRPCServer) Balance(req *http.Request, args *BalanceArgs, reply *Bal
 	reply.Amount = balance
 	return err
 }
+
+type VerifyStatusArgs struct {
+	TxID ids.ID `json:"txId"`
+}
+
+type VerifyStatusReply struct {
+	Status bool `json:"status"`
+}
+
+func (j *JSONRPCServer) VerifyStatus(req *http.Request, args *VerifyStatusArgs, reply *VerifyStatusReply) error {
+	ctx, span := j.c.Tracer().Start(req.Context(), "Server.VerifyStatus")
+	defer span.End()
+
+	status, err := j.c.GetVerifyStatusFromState(ctx, args.TxID)
+	if err != nil {
+		return err
+	}
+	reply.Status = status
+	return nil
+}

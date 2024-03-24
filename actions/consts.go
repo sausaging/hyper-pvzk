@@ -5,8 +5,10 @@ package actions
 
 const TransferComputeUnits = 1
 const RegisterComputeUnits = 1000
-const MidenComputeUnits = 6_000
-const DeployComputeUnits = 10_000
-const SP1ComputeUnits = 8_000
-const RiscZeroComputeUnits = 8_000
-const GnarkComputeUnits = 10_000
+const RegisterImageComputeUnits = 4000
+const ValidatorVoteComputeUnits = 5000
+
+const SP1ComputeUnits = 8000
+const RiscZeroComputeUnits = 8000
+const MidenComputeUnits = 6000
+const GnarkComputeUnits = 8000

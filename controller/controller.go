@@ -13,12 +13,13 @@ import (
 	"github.com/ava-labs/avalanchego/snow"
 	"github.com/ava-labs/hypersdk/builder"
 	"github.com/ava-labs/hypersdk/chain"
+	"github.com/ava-labs/hypersdk/fees"
+	"github.com/ava-labs/hypersdk/filedb"
 	"github.com/ava-labs/hypersdk/gossiper"
 	hrpc "github.com/ava-labs/hypersdk/rpc"
 	hstorage "github.com/ava-labs/hypersdk/storage"
 	"github.com/ava-labs/hypersdk/vm"
-	"go.uber.org/zap"
-
+	handle "github.com/sausaging/hyper-pvzk/accept_handlers"
 	"github.com/sausaging/hyper-pvzk/actions"
 	"github.com/sausaging/hyper-pvzk/auth"
 	"github.com/sausaging/hyper-pvzk/config"
@@ -26,7 +27,9 @@ import (
 	"github.com/sausaging/hyper-pvzk/genesis"
 	"github.com/sausaging/hyper-pvzk/rpc"
 	"github.com/sausaging/hyper-pvzk/storage"
+	"github.com/sausaging/hyper-pvzk/trustless"
 	"github.com/sausaging/hyper-pvzk/version"
+	"go.uber.org/zap"
 )
 
 var _ vm.Controller = (*Controller)(nil)
@@ -43,6 +46,9 @@ type Controller struct {
 	metrics *metrics
 
 	metaDB database.Database
+	fileDB *filedb.FileDB
+
+	trustless *trustless.Trustless
 }
 
 func New() *vm.VM {
@@ -63,6 +69,7 @@ func (c *Controller) Initialize(
 	gossiper.Gossiper,
 	database.Database,
 	database.Database,
+	*filedb.FileDB,
 	vm.Handlers,
 	chain.ActionRegistry,
 	chain.AuthRegistry,
@@ -72,25 +79,24 @@ func (c *Controller) Initialize(
 	c.inner = inner
 	c.snowCtx = snowCtx
 	c.stateManager = &storage.StateManager{}
-
 	// Instantiate metrics
 	var err error
 	c.metrics, err = newMetrics(gatherer)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
 
 	// Load config and genesis
 	c.config, err = config.New(c.snowCtx.NodeID, configBytes)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
 	c.snowCtx.Log.SetLevel(c.config.GetLogLevel())
 	snowCtx.Log.Info("initialized config", zap.Bool("loaded", c.config.Loaded()), zap.Any("contents", c.config))
 
 	c.genesis, err = genesis.New(genesisBytes, upgradeBytes)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf(
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf(
 			"unable to read genesis: %w",
 			err,
 		)
@@ -98,12 +104,16 @@ func (c *Controller) Initialize(
 	snowCtx.Log.Info("loaded genesis", zap.Any("genesis", c.genesis))
 
 	// Create DBs
-	blockDB, stateDB, metaDB, err := hstorage.New(snowCtx.ChainDataDir, gatherer)
+	blockDB, fileDB, stateDB, metaDB, err := hstorage.New(snowCtx.ChainDataDir, gatherer)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
 	c.metaDB = metaDB
+	c.fileDB = fileDB
 
+	c.trustless = trustless.New(c.config.Port, c.config.ListenerPort, &snowCtx.WarpSigner, snowCtx.PublicKey, c.config.ValPrivKey, c.snowCtx.Log, c.UnitPrices, c.Submit, c.Rules)
+
+	go c.trustless.ListenResults()
 	// Create handlers
 	//
 	// hypersdk handler are initiatlized automatically, you just need to
@@ -114,7 +124,7 @@ func (c *Controller) Initialize(
 		rpc.NewJSONRPCServer(c),
 	)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
 	apis[rpc.JSONRPCEndpoint] = jsonRPCHandler
 
@@ -132,15 +142,15 @@ func (c *Controller) Initialize(
 		gcfg := gossiper.DefaultProposerConfig()
 		gossip, err = gossiper.NewProposer(inner, gcfg)
 		if err != nil {
-			return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 		}
 	}
-	return c.config, c.genesis, build, gossip, blockDB, stateDB, apis, consts.ActionRegistry, consts.AuthRegistry, auth.Engines(), nil
+	return c.config, c.genesis, build, gossip, blockDB, stateDB, fileDB, apis, consts.ActionRegistry, consts.AuthRegistry, auth.Engines(), nil
 }
 
 func (c *Controller) Rules(t int64) chain.Rules {
 	// TODO: extend with [UpgradeBytes]
-	return c.genesis.Rules(t, c.snowCtx.NetworkID, c.snowCtx.ChainID, c.config.Client)
+	return c.genesis.Rules(t, c.snowCtx.NetworkID, c.snowCtx.ChainID, c.config.Client, c.inner.CurrentValidators)
 }
 
 func (c *Controller) StateManager() chain.StateManager {
@@ -154,6 +164,31 @@ func (c *Controller) Accepted(ctx context.Context, blk *chain.StatelessBlock) er
 	results := blk.Results()
 	for i, tx := range blk.Txs {
 		result := results[i]
+
+		switch tx.Action.(type) {
+
+		case *actions.SP1:
+			sp1 := tx.Action.(*actions.SP1)
+			c.trustless.ListenActions(tx.ID(), sp1.TimeOutBlocks)
+			if err := handle.HandleSP1(tx.ID(), sp1.ImageID, uint16(sp1.ProofValType), c.fileDB.BaseDir(), c.config.Client); err != nil {
+				c.inner.Logger().Info("error handling SP1", zap.Error(err))
+			}
+
+		case *actions.RiscZero:
+			risc0 := tx.Action.(*actions.RiscZero)
+			c.trustless.ListenActions(tx.ID(), risc0.TimeOutBlocks)
+			if err := handle.HandleRiscZero(tx.ID(), risc0.ImageID, uint16(risc0.ProofValType), risc0.RiscZeroImageID, c.fileDB.BaseDir(), c.config.Client); err != nil {
+				c.inner.Logger().Info("error handling RiscZero", zap.Error(err))
+			}
+		case *actions.Miden:
+			miden := tx.Action.(*actions.Miden)
+			c.trustless.ListenActions(tx.ID(), miden.TimeOutBlocks)
+			if err := handle.HandleMiden(tx.ID(), miden.ImageID, uint16(miden.ProofValType), miden.CodeFrontEnd, miden.InputsFrontEnd, miden.OutputsFrontEnd, c.fileDB.BaseDir(), c.config.Client); err != nil {
+				c.inner.Logger().Info("error handling Miden", zap.Error(err))
+			}
+			// case *actions.ValResultVote:
+			// 	//@todo keep track of spendings of validators
+		}
 		if c.config.GetStoreTransactions() {
 			err := storage.StoreTransaction(
 				ctx,
@@ -186,4 +221,16 @@ func (*Controller) Shutdown(context.Context) error {
 	// Do not close any databases provided during initialization. The VM will
 	// close any databases your provided.
 	return nil
+}
+
+func (c *Controller) GetFileDB() *filedb.FileDB {
+	return c.fileDB
+}
+
+func (c *Controller) UnitPrices() (fees.Dimensions, error) {
+	return c.inner.UnitPrices(context.Background())
+}
+
+func (c *Controller) Submit(ctx context.Context, verifyAuth bool, txs []*chain.Transaction) []error {
+	return c.inner.Submit(ctx, verifyAuth, txs)
 }
