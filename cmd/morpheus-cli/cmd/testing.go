@@ -28,7 +28,7 @@ var registerCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		ps, err := handler.Root().PromptInt("proving sytem: sp1 -> 1, risc0 -> 2, miden -> 3, gnark -> 4 ", consts.MaxInt)
+		ps, err := handler.Root().PromptInt("proving sytem: sp1 -> 1, miden -> 2, risc0 -> 3, gnark -> 4 ", consts.MaxInt)
 		if err != nil {
 			return err
 		}

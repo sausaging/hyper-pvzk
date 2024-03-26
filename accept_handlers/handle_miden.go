@@ -71,7 +71,7 @@ func HandleMiden( //@todo send the hashes stored for every proofvaltype to rust 
 		// call the submit-verify endpoint with txID
 		vargs := VerifyRequestArgs{
 			TxID:       txID.String(),
-			VerifyType: SP1VERIFY,
+			VerifyType: MIDENVERIFY,
 		}
 		uri := endPointRequester.Uri + requester.VERIFYENDPOINT
 		vjsonData, err := json.Marshal(vargs)

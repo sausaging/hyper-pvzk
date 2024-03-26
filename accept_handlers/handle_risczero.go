@@ -65,7 +65,7 @@ func HandleRiscZero( //@todo send the hashes stored for every proofvaltype to ru
 		// call the submit-verify endpoint with txID
 		vargs := VerifyRequestArgs{
 			TxID:       txID.String(),
-			VerifyType: SP1VERIFY,
+			VerifyType: RISCZEROVERFIY,
 		}
 		uri := endPointRequester.Uri + requester.VERIFYENDPOINT
 		vjsonData, err := json.Marshal(vargs)
