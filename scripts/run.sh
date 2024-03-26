@@ -28,6 +28,7 @@ STORE_TXS=${STORE_TXS:-true}
 UNLIMITED_USAGE=${UNLIMITED_USAGE:-true}
 ADDRESS=${ADDRESS:-morpheus1qrzvk4zlwj9zsacqgtufx7zvapd3quufqpxk5rsdd4633m4wz2fdjk97rwu}
 HUB_PORT=${HUB_PORT:-http://127.0.0.1:8080}
+PRIVKEY=${PRIVKEY:-323b1d8f4eed5f0da9da93071b034f2dce9d2d22692c172f3cb252a64ddfafd01b057de320297c29ad0c1f589ea216869cf1938d88c9fbd70d6748323dbf2fa7}
 if [[ ${MODE} != "run" ]]; then
   LOGLEVEL=debug
   STATESYNC_DELAY=100000000 # 100ms
@@ -162,8 +163,8 @@ cat <<EOF > "${TMPDIR}"/morpheusvm.config
   "logLevel": "${LOGLEVEL}",
   "continuousProfilerDir":"${TMPDIR}/morpheusvm-e2e-profiles/*",
   "stateSyncServerDelay": ${STATESYNC_DELAY},
-  "hubPorturi": "${HUB_PORT}"
-  "valPrivKey": 323b1d8f4eed5f0da9da93071b034f2dce9d2d22692c172f3cb252a64ddfafd01b057de320297c29ad0c1f589ea216869cf1938d88c9fbd70d6748323dbf2fa7
+  "hubPorturi": "${HUB_PORT}",
+  "valPrivKey": "${PRIVKEY}"
 }
 EOF
 mkdir -p "${TMPDIR}"/morpheusvm-e2e-profiles

@@ -28,7 +28,7 @@ var registerCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		ps, err := handler.Root().PromptInt("proving sytem: sp1 -> 0, risc0 -> 1, miden -> 2, gnark -> 3 ", consts.MaxInt)
+		ps, err := handler.Root().PromptInt("proving sytem: sp1 -> 1, risc0 -> 2, miden -> 3, gnark -> 4 ", consts.MaxInt)
 		if err != nil {
 			return err
 		}
@@ -80,7 +80,7 @@ var broadcastCmd = &cobra.Command{
 	Use: "broadcast",
 	RunE: func(*cobra.Command, []string) error {
 		ctx := context.Background()
-		_, _, _, _, bcli, _, err := handler.DefaultActor()
+		_, _, _, cli, _, _, err := handler.DefaultActor()
 		if err != nil {
 			return err
 		}
@@ -88,17 +88,31 @@ var broadcastCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		cont, err := handler.Root().PromptContinue()
-		if !cont || err != nil {
-			return err
-		}
 		// Read the existing data from the file
 		data, err := os.ReadFile(fileName)
 		if err != nil {
 			log.Fatal("Error reading file:", err)
 		}
+
+		imageID, err := handler.Root().PromptID("image id")
+		if err != nil {
+			return nil
+		}
+		valType, err := handler.Root().PromptInt("proof val type(1 for ELF, rest for proofs)", int(consts.MaxUint16))
+		if err != nil {
+			return err
+		}
+		chunkIndex, err := handler.Root().PromptInt("chunk index", int(consts.MaxUint16))
+		if err != nil {
+			return err
+		}
+		cont, err := handler.Root().PromptContinue()
+		if !cont || err != nil {
+			return err
+		}
+
 		// @todo we are naive broadcasting full file. change this to 100kib blob based broadcast
-		bcli.Broadcast(ctx, data)
+		cli.SubmitChunks(ctx, imageID, uint16(valType), uint16(chunkIndex), data)
 		return nil
 	},
 }

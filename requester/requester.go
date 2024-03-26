@@ -79,7 +79,7 @@ func Ping(client *EndpointRequester) (bool, string, string, error) {
 }
 
 func PingSingle(client *EndpointRequester) (bool, error) {
-	endPointUri := client.Uri + PINGENDPOINT
+	endPointUri := client.Uri + PINGSINGLEENDPOINT
 	req, err := http.NewRequest(http.MethodGet, endPointUri, bytes.NewBuffer([]byte{}))
 	if err != nil {
 		return false, fmt.Errorf("%s: can't request http", err)

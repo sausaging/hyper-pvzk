@@ -100,7 +100,7 @@ func New(nodeID ids.NodeID, b []byte) (*Config, error) {
 		return nil, fmt.Errorf("%s: can't Ping Hub", err)
 	}
 
-	c.Client = requester.New(rustPort)
+	c.Client = requester.New("http://127.0.0.1:" + rustPort)
 
 	success, err = requester.PingSingle(c.Client)
 	if err != nil || !success {
