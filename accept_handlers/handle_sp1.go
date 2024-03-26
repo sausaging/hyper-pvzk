@@ -31,8 +31,8 @@ func HandleSP1(
 ) error { //@todo send the hashes stored for every proofvaltype to rust server
 	elfKey := storage.DeployKey(imageID, elfValType)
 	proofKey := storage.DeployKey(imageID, proofValType)
-	elfFilePath := baseDir + elfKey
-	proofFilePath := baseDir + proofKey
+	elfFilePath := baseDir + "/" + elfKey
+	proofFilePath := baseDir + "/" + proofKey
 	// call the sp1 endpoint with elfFilePath, proofFilePath, txID
 	cli := endPointRequester.Cli
 	uri := endPointRequester.Uri + requester.SP1ENDPOINT

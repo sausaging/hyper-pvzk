@@ -29,7 +29,7 @@ func HandleRiscZero( //@todo send the hashes stored for every proofvaltype to ru
 	endPointRequester *requester.EndpointRequester) error {
 
 	proofKey := storage.DeployKey(imageID, proofValType)
-	proofFilePath := baseDir + proofKey
+	proofFilePath := baseDir + "/" + proofKey
 
 	cli := endPointRequester.Cli
 	uri := endPointRequester.Uri + requester.RISCZEROENDPOINT
