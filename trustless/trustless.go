@@ -142,11 +142,11 @@ func (t *Trustless) submitResult(w http.ResponseWriter, r *http.Request) {
 	}
 	parser := t.Parser()
 
-	err = t.GenerateTransaction(context.Background(), parser, &action, t.authFactory)
+	txID, err := t.GenerateTransaction(context.Background(), parser, &action, t.authFactory)
 	if err != nil {
 		t.logger.Error("error in submitting tx", zap.Error(err))
 	}
-	fmt.Fprintf(w, "Result submitted\n")
+	fmt.Fprintf(w, "Result submitted. %s\n", txID.String())
 }
 
 func (t *Trustless) GenerateTransaction(
@@ -154,18 +154,18 @@ func (t *Trustless) GenerateTransaction(
 	parser chain.Parser,
 	action chain.Action,
 	authFactory chain.AuthFactory,
-) error {
+) (ids.ID, error) {
 	unitPrices, err := t.unitPrices()
 	if err != nil {
-		return fmt.Errorf("%s: error in fetching unit prices", err)
+		return ids.Empty, fmt.Errorf("%s: error in fetching unit prices", err)
 	}
 	maxUnits, err := chain.EstimateMaxUnits(parser.Rules(time.Now().UnixMilli()), action, authFactory, nil)
 	if err != nil {
-		return fmt.Errorf("%s: error in estimating max units", err)
+		return ids.Empty, fmt.Errorf("%s: error in estimating max units", err)
 	}
 	maxFee, err := fees.MulSum(unitPrices, maxUnits)
 	if err != nil {
-		return fmt.Errorf("%s: error in calculating max fee", err)
+		return ids.Empty, fmt.Errorf("%s: error in calculating max fee", err)
 	}
 	now := time.Now().UnixMilli()
 	rules := parser.Rules(now)
@@ -178,8 +178,8 @@ func (t *Trustless) GenerateTransaction(
 	tx := chain.NewTx(base, nil, action)
 	tx, err = tx.Sign(authFactory, actionRegistry, authRegistry)
 	if err != nil {
-		return fmt.Errorf("%w: failed to sign transaction", err)
+		return ids.Empty, fmt.Errorf("%w: failed to sign transaction", err)
 	}
 	errs := t.submit(ctx, false, []*chain.Transaction{tx})
-	return errs[0]
+	return tx.ID(), errs[0]
 }

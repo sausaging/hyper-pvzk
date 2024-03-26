@@ -106,8 +106,8 @@ go build \
 -o "${TMPDIR}"/avalanchego-"${VERSION}"/plugins/qCNyZHrs3rZX458wPJXPJJypPf6w423A84jnfbdP2TPEmEE9u \
 ./cmd/morpheusvm
 
-# echo "building morpheus-cli"
-# go build -v -o "${TMPDIR}"/morpheus-cli ./cmd/morpheus-cli
+echo "building morpheus-cli"
+go build -v -o "${TMPDIR}"/morpheus-cli ./cmd/morpheus-cli
 
 # log everything in the avalanchego directory
 find "${TMPDIR}"/avalanchego-"${VERSION}"
