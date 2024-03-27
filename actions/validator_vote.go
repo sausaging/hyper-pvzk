@@ -137,7 +137,9 @@ func (v *ValidatorVote) Execute(
 			if err := storage.GetVote(ctx, mu, vTXID, actor); err != nil {
 				return false, 5000, utils.ErrBytes(fmt.Errorf("%s: already voted", err)), nil, nil
 			}
-			storage.UpdateWeight(ctx, mu, vTXID, w, totalWeight)
+			if v.Vote {
+				storage.UpdateWeight(ctx, mu, vTXID, w, totalWeight)
+			}
 			storage.StoreVote(ctx, mu, vTXID, actor)
 		}
 	}
