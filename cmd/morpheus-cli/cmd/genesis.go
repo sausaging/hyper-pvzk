@@ -10,8 +10,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/ava-labs/hypersdk/fees"
 	"github.com/sausaging/hyper-pvzk/genesis"
+	"github.com/sausaging/hypersdk/fees"
 )
 
 var genesisCmd = &cobra.Command{

@@ -9,10 +9,10 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/trace"
 	"github.com/ava-labs/avalanchego/utils/logging"
-	"github.com/ava-labs/hypersdk/codec"
-	"github.com/ava-labs/hypersdk/fees"
 	"github.com/sausaging/hyper-pvzk/genesis"
 	"github.com/sausaging/hyper-pvzk/storage"
+	"github.com/sausaging/hypersdk/codec"
+	"github.com/sausaging/hypersdk/fees"
 )
 
 func (c *Controller) Genesis() *genesis.Genesis {
@@ -47,10 +47,3 @@ func (c *Controller) GetVerifyStatusFromState(
 ) (bool, error) {
 	return storage.GetVerifyStatusFromState(ctx, c.inner.ReadState, txID)
 }
-
-// func (c *Controller) GetValidaorVoteFromState(
-// 	ctx context.Context,
-// 	txID ids.ID,
-// 	actor codec.Address,
-// ) (bool, error) {
-// }

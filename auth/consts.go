@@ -4,8 +4,8 @@
 package auth
 
 import (
-	"github.com/ava-labs/hypersdk/vm"
 	"github.com/sausaging/hyper-pvzk/consts"
+	"github.com/sausaging/hypersdk/vm"
 )
 
 func Engines() map[uint8]vm.AuthEngine {

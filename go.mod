@@ -5,7 +5,6 @@ go 1.21
 require (
 	github.com/ava-labs/avalanche-network-runner v1.7.4-rc.0
 	github.com/ava-labs/avalanchego v1.10.18
-	github.com/ava-labs/hypersdk v0.0.16
 	github.com/ethereum/go-ethereum v1.12.0
 	github.com/fatih/color v1.13.0
 	github.com/gorilla/mux v1.8.0
@@ -13,6 +12,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.13.1
 	github.com/onsi/gomega v1.29.0
 	github.com/prometheus/client_golang v1.16.0
+	github.com/sausaging/hypersdk v0.0.1-name
 	github.com/spf13/cobra v1.7.0
 	go.uber.org/zap v1.26.0
 )
@@ -150,4 +150,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/ava-labs/hypersdk => ../hypersdk
+// replace github.com/sausaging/hypersdk => ../hypersdk

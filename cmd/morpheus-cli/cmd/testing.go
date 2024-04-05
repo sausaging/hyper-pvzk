@@ -5,10 +5,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/ava-labs/hypersdk/chain"
-	"github.com/ava-labs/hypersdk/consts"
-	"github.com/ava-labs/hypersdk/utils"
 	"github.com/sausaging/hyper-pvzk/actions"
+	"github.com/sausaging/hypersdk/chain"
+	"github.com/sausaging/hypersdk/consts"
+	"github.com/sausaging/hypersdk/utils"
 	"github.com/spf13/cobra"
 )
 

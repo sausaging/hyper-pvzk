@@ -10,15 +10,15 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow/validators"
 
-	"github.com/ava-labs/hypersdk/chain"
-	"github.com/ava-labs/hypersdk/requester"
-	"github.com/ava-labs/hypersdk/rpc"
-	"github.com/ava-labs/hypersdk/utils"
 	"github.com/sausaging/hyper-pvzk/consts"
 	"github.com/sausaging/hyper-pvzk/genesis"
 	_ "github.com/sausaging/hyper-pvzk/registry" // ensure registry populated
 	req "github.com/sausaging/hyper-pvzk/requester"
 	"github.com/sausaging/hyper-pvzk/storage"
+	"github.com/sausaging/hypersdk/chain"
+	"github.com/sausaging/hypersdk/requester"
+	"github.com/sausaging/hypersdk/rpc"
+	"github.com/sausaging/hypersdk/utils"
 )
 
 type JSONRPCClient struct {

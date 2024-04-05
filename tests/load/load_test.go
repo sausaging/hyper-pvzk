@@ -34,23 +34,23 @@ import (
 	"github.com/onsi/gomega"
 	"go.uber.org/zap"
 
-	"github.com/ava-labs/hypersdk/chain"
-	"github.com/ava-labs/hypersdk/codec"
-	hconsts "github.com/ava-labs/hypersdk/consts"
-	"github.com/ava-labs/hypersdk/crypto/ed25519"
-	"github.com/ava-labs/hypersdk/fees"
-	"github.com/ava-labs/hypersdk/pebble"
-	hutils "github.com/ava-labs/hypersdk/utils"
-	"github.com/ava-labs/hypersdk/vm"
-	"github.com/ava-labs/hypersdk/workers"
+	"github.com/sausaging/hypersdk/chain"
+	"github.com/sausaging/hypersdk/codec"
+	hconsts "github.com/sausaging/hypersdk/consts"
+	"github.com/sausaging/hypersdk/crypto/ed25519"
+	"github.com/sausaging/hypersdk/fees"
+	"github.com/sausaging/hypersdk/pebble"
+	hutils "github.com/sausaging/hypersdk/utils"
+	"github.com/sausaging/hypersdk/vm"
+	"github.com/sausaging/hypersdk/workers"
 
-	"github.com/ava-labs/hypersdk/rpc"
 	"github.com/sausaging/hyper-pvzk/actions"
 	"github.com/sausaging/hyper-pvzk/auth"
 	"github.com/sausaging/hyper-pvzk/consts"
 	"github.com/sausaging/hyper-pvzk/controller"
 	"github.com/sausaging/hyper-pvzk/genesis"
 	trpc "github.com/sausaging/hyper-pvzk/rpc"
+	"github.com/sausaging/hypersdk/rpc"
 )
 
 const genesisBalance uint64 = hconsts.MaxUint64

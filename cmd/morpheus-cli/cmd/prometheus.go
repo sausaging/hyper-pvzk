@@ -8,8 +8,8 @@ import (
 	"fmt"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/hypersdk/cli"
-	"github.com/ava-labs/hypersdk/utils"
+	"github.com/sausaging/hypersdk/cli"
+	"github.com/sausaging/hypersdk/utils"
 	"github.com/spf13/cobra"
 )
 

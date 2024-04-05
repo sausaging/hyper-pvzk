@@ -10,14 +10,14 @@ import (
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/platformvm/warp"
-	"github.com/ava-labs/hypersdk/chain"
-	"github.com/ava-labs/hypersdk/cli"
-	"github.com/ava-labs/hypersdk/codec"
-	"github.com/ava-labs/hypersdk/rpc"
-	"github.com/ava-labs/hypersdk/utils"
 	"github.com/sausaging/hyper-pvzk/actions"
 	"github.com/sausaging/hyper-pvzk/consts"
 	brpc "github.com/sausaging/hyper-pvzk/rpc"
+	"github.com/sausaging/hypersdk/chain"
+	"github.com/sausaging/hypersdk/cli"
+	"github.com/sausaging/hypersdk/codec"
+	"github.com/sausaging/hypersdk/rpc"
+	"github.com/sausaging/hypersdk/utils"
 )
 
 // sendAndWait may not be used concurrently

@@ -7,12 +7,12 @@ import (
 	"context"
 
 	"github.com/ava-labs/avalanchego/vms/platformvm/warp"
-	"github.com/ava-labs/hypersdk/chain"
-	"github.com/ava-labs/hypersdk/codec"
-	"github.com/ava-labs/hypersdk/crypto"
-	"github.com/ava-labs/hypersdk/crypto/secp256r1"
-	"github.com/ava-labs/hypersdk/utils"
 	"github.com/sausaging/hyper-pvzk/consts"
+	"github.com/sausaging/hypersdk/chain"
+	"github.com/sausaging/hypersdk/codec"
+	"github.com/sausaging/hypersdk/crypto"
+	"github.com/sausaging/hypersdk/crypto/secp256r1"
+	"github.com/sausaging/hypersdk/utils"
 )
 
 var _ chain.Auth = (*SECP256R1)(nil)

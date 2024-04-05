@@ -5,10 +5,10 @@
   The Choice is Yours
 </p>
 <p align="center">
-  <a href="https://github.com/ava-labs/hypersdk/actions/workflows/morpheusvm-static-analysis.yml"><img src="https://github.com/ava-labs/hypersdk/actions/workflows/morpheusvm-static-analysis.yml/badge.svg" /></a>
-  <a href="https://github.com/ava-labs/hypersdk/actions/workflows/morpheusvm-unit-tests.yml"><img src="https://github.com/ava-labs/hypersdk/actions/workflows/morpheusvm-unit-tests.yml/badge.svg" /></a>
-  <a href="https://github.com/ava-labs/hypersdk/actions/workflows/morpheusvm-sync-tests.yml"><img src="https://github.com/ava-labs/hypersdk/actions/workflows/morpheusvm-sync-tests.yml/badge.svg" /></a>
-  <a href="https://github.com/ava-labs/hypersdk/actions/workflows/morpheusvm-load-tests.yml"><img src="https://github.com/ava-labs/hypersdk/actions/workflows/morpheusvm-load-tests.yml/badge.svg" /></a>
+  <a href="https://github.com/sausaging/hypersdk/actions/workflows/morpheusvm-static-analysis.yml"><img src="https://github.com/sausaging/hypersdk/actions/workflows/morpheusvm-static-analysis.yml/badge.svg" /></a>
+  <a href="https://github.com/sausaging/hypersdk/actions/workflows/morpheusvm-unit-tests.yml"><img src="https://github.com/sausaging/hypersdk/actions/workflows/morpheusvm-unit-tests.yml/badge.svg" /></a>
+  <a href="https://github.com/sausaging/hypersdk/actions/workflows/morpheusvm-sync-tests.yml"><img src="https://github.com/sausaging/hypersdk/actions/workflows/morpheusvm-sync-tests.yml/badge.svg" /></a>
+  <a href="https://github.com/sausaging/hypersdk/actions/workflows/morpheusvm-load-tests.yml"><img src="https://github.com/sausaging/hypersdk/actions/workflows/morpheusvm-load-tests.yml/badge.svg" /></a>
 </p>
 
 ---
@@ -202,5 +202,5 @@ height:1 txs:1 units:440 root:WspVPrHNAwBcJRJPVwt7TW6WT4E74dN8DuD3WXueQTMt5FDdi
 <br>
 <br>
 <p align="center">
-  <a href="https://github.com/ava-labs/hypersdk"><img width="40%" alt="powered-by-hypersdk" src="assets/hypersdk.png"></a>
+  <a href="https://github.com/sausaging/hypersdk"><img width="40%" alt="powered-by-hypersdk" src="assets/hypersdk.png"></a>
 </p>

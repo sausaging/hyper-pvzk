@@ -29,7 +29,7 @@ run \
 --fail-fast \
 -cover \
 -covermode=atomic \
--coverpkg=github.com/ava-labs/hypersdk/... \
+-coverpkg=github.com/sausaging/hypersdk/... \
 -coverprofile=integration.coverage.out \
 ./tests/integration \
 --vms 3

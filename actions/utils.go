@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/hypersdk/consts"
 	rpc "github.com/gorilla/rpc/v2/json2"
+	"github.com/sausaging/hypersdk/consts"
 )
 
 func WriteFile(filePath string, data []byte) error {

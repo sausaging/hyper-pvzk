@@ -8,9 +8,9 @@ import (
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/trace"
-	"github.com/ava-labs/hypersdk/codec"
-	"github.com/ava-labs/hypersdk/fees"
 	"github.com/sausaging/hyper-pvzk/genesis"
+	"github.com/sausaging/hypersdk/codec"
+	"github.com/sausaging/hypersdk/fees"
 )
 
 type Controller interface {

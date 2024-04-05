@@ -8,10 +8,10 @@ import (
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow/validators"
-	"github.com/ava-labs/hypersdk/chain"
-	"github.com/ava-labs/hypersdk/fees"
 	"github.com/sausaging/hyper-pvzk/requester"
 	"github.com/sausaging/hyper-pvzk/storage"
+	"github.com/sausaging/hypersdk/chain"
+	"github.com/sausaging/hypersdk/fees"
 )
 
 var _ chain.Rules = (*Rules)(nil)

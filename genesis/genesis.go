@@ -12,13 +12,13 @@ import (
 	smath "github.com/ava-labs/avalanchego/utils/math"
 	"github.com/ava-labs/avalanchego/x/merkledb"
 
-	"github.com/ava-labs/hypersdk/codec"
-	hconsts "github.com/ava-labs/hypersdk/consts"
-	"github.com/ava-labs/hypersdk/fees"
-	"github.com/ava-labs/hypersdk/state"
-	"github.com/ava-labs/hypersdk/vm"
 	"github.com/sausaging/hyper-pvzk/consts"
 	"github.com/sausaging/hyper-pvzk/storage"
+	"github.com/sausaging/hypersdk/codec"
+	hconsts "github.com/sausaging/hypersdk/consts"
+	"github.com/sausaging/hypersdk/fees"
+	"github.com/sausaging/hypersdk/state"
+	"github.com/sausaging/hypersdk/vm"
 )
 
 var _ vm.Genesis = (*Genesis)(nil)

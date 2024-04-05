@@ -12,13 +12,13 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/logging"
 	"github.com/ava-labs/avalanchego/utils/profiler"
-	"github.com/ava-labs/hypersdk/codec"
-	"github.com/ava-labs/hypersdk/config"
-	"github.com/ava-labs/hypersdk/trace"
-	"github.com/ava-labs/hypersdk/vm"
 	"github.com/sausaging/hyper-pvzk/consts"
 	"github.com/sausaging/hyper-pvzk/requester"
 	"github.com/sausaging/hyper-pvzk/version"
+	"github.com/sausaging/hypersdk/codec"
+	"github.com/sausaging/hypersdk/config"
+	"github.com/sausaging/hypersdk/trace"
+	"github.com/sausaging/hypersdk/vm"
 )
 
 var _ vm.Config = (*Config)(nil)
