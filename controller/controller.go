@@ -186,6 +186,12 @@ func (c *Controller) Accepted(ctx context.Context, blk *chain.StatelessBlock) er
 			if err := handle.HandleMiden(tx.ID(), miden.ImageID, uint16(miden.ProofValType), miden.CodeFrontEnd, miden.InputsFrontEnd, miden.OutputsFrontEnd, c.fileDB.BaseDir(), c.config.Client); err != nil {
 				c.inner.Logger().Info("error handling Miden", zap.Error(err))
 			}
+		case *actions.Jolt:
+			jolt := tx.Action.(*actions.Jolt)
+			c.trustless.ListenActions(tx.ID(), jolt.TimeOutBlocks)
+			if err := handle.HandleJolt(tx.ID(), jolt.ImageID, uint16(jolt.ProofValType), c.fileDB.BaseDir(), c.config.Client); err != nil {
+				c.inner.Logger().Info("error handling Jolt", zap.Error(err))
+			}
 			// case *actions.ValResultVote:
 			// 	//@todo keep track of spendings of validators
 		}

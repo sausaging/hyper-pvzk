@@ -67,3 +67,9 @@ func (r *Register) Execute(
 	// @todo should we store what type of proof system is meant to be used by the imageID(i.e. txID) generated??
 	return true, RegisterComputeUnits, nil, nil, nil
 }
+
+type Broadcast struct {
+	ImageID ids.ID `json:"image_id"`
+	ValType uint64 `json:"val_type"`
+	Data    []byte `json:"data"`
+}

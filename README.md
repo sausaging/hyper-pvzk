@@ -1,3 +1,4 @@
+
 <p align="center">
   <img width="90%" alt="morpheusvm" src="assets/logo.jpeg">
 </p>
@@ -20,6 +21,11 @@
 - Why should validators store the proofs?
 - To incentivize validators storing proofs, keep a activation limit, where validators receive results for actively voting over proof verifications.
 - Min timeout is 10 blocks and max timeout is 300 blocks -> check introduced in storeTimeOut
+- Enforce checks to make sure, we are verifying proofs against the correct image configs. to prevent network abuse.
+- Enforce penality when trying to verify proofs, without broadcasting. --> to verify if broadcasting really happened submit, a validator's valid signature. 
+- make minimum timeout dependent on network congestion??
+- check if the validator vote tx originates from validator and do the execution logic, without verifying signature.this will be a huge optimisation. we won't be wasting time in verifying signatures again and again.
+
 <p align="center">
   <img width="90%" alt="sausage" src="assets/sausage.jpg">
 </p>

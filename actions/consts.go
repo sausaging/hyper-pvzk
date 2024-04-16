@@ -12,3 +12,4 @@ const SP1ComputeUnits = 8000
 const RiscZeroComputeUnits = 8000
 const MidenComputeUnits = 6000
 const GnarkComputeUnits = 8000
+const JoltComputeUnits = 20_000
