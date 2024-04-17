@@ -14,7 +14,7 @@ const (
 	MidenID    uint8 = 5
 	RiscZeroID uint8 = 6
 	GnarkID    uint8 = 7
-
+	JoltID     uint8 = 8
 	// Auth TypeIDs
 	ED25519ID   uint8 = 0
 	SECP256R1ID uint8 = 1

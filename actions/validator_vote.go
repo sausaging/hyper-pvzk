@@ -89,6 +89,9 @@ func (v *ValidatorVote) Execute(
 	// we can also do this as a warp message.
 	// but how can we verify weight? so we are following this way
 	// can be played out with
+
+	// @todo check if the tx originates from validator and do the execution logic, without verifying signature.
+	// this will be a huge optimisation. we won't be wasting time in verifying signatures again and again.
 	vTXID := v.TxID
 	timeOut, err := storage.GetTimeOut(ctx, mu, vTXID)
 	if err != nil {
