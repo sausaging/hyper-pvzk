@@ -72,6 +72,8 @@ func handleTx(tx *chain.Transaction, result *chain.Result) {
 			summaryStr = fmt.Sprintf("successfully verified risc zero proof of image id: %s", action.ImageID.String())
 		case *actions.Miden:
 			summaryStr = fmt.Sprintf("successfully verified miden proof of image id: %s", action.ImageID.String())
+		case *actions.PLONKY2:
+			summaryStr = fmt.Sprintf("successfully verified plonky2 proof of image id: %s", action.ImageID.String())
 			// case *actions.Gnark:
 			// 	var ps string
 			// 	if action.ProvingSystem {
