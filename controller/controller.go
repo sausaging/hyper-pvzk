@@ -192,6 +192,12 @@ func (c *Controller) Accepted(ctx context.Context, blk *chain.StatelessBlock) er
 			if err := handle.HandleJolt(tx.ID(), jolt.ImageID, uint16(jolt.ProofValType), c.fileDB.BaseDir(), c.config.Client); err != nil {
 				c.inner.Logger().Info("error handling Jolt", zap.Error(err))
 			}
+		case *actions.PLONKY2:
+			plonky2 := tx.Action.(*actions.PLONKY2)
+			c.trustless.ListenActions(tx.ID(), plonky2.TimeOutBlocks)
+			if err := handle.HandlePlonky2(tx.ID(), plonky2.ImageID, uint16(plonky2.ProofValType), c.fileDB.BaseDir(), c.config.Client); err != nil {
+				c.inner.Logger().Info("error handling Plonky2", zap.Error(err))
+			}
 			// case *actions.ValResultVote:
 			// 	//@todo keep track of spendings of validators
 		}

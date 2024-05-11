@@ -28,7 +28,7 @@ var registerCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		ps, err := handler.Root().PromptInt("proving sytem: sp1 -> 1, miden -> 2, risc0 -> 3, gnark -> 4, jolt -> 5 ", consts.MaxInt)
+		ps, err := handler.Root().PromptInt("proving sytem: sp1 -> 1, miden -> 2, risc0 -> 3, jolt -> 4, plonky2 -> 5 , gnark -> 6 ", consts.MaxInt)
 		if err != nil {
 			return err
 		}
@@ -134,7 +134,7 @@ var verifyCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		verifyType, err := handler.Root().PromptInt("verification type: 1 -> SP1, 2 -> Miden, 3 -> Risc0, 4 -> Gnark, 5 -> Jolt", 10)
+		verifyType, err := handler.Root().PromptInt("verification type: 1 -> SP1, 2 -> Miden, 3 -> Risc0, 4 -> Jolt, 5 -> Plonky2, 6 -> Gnark", 10)
 		if err != nil {
 			return err
 		}
@@ -183,17 +183,23 @@ var verifyCmd = &cobra.Command{
 				RiscZeroImageID: riscZeroImageID,
 				TimeOutBlocks:   uint64(timeOutBlocks),
 			}
-		} else if verifyType == 4 {
-
-		} else if verifyType == 5 {
+		}  else if verifyType == 4 {
 			action = &actions.Jolt{
 				ImageID:       imageID,
 				ProofValType:  uint64(valType),
 				TimeOutBlocks: uint64(timeOutBlocks),
 			}
+		} else if verifyType == 5 {
+			action = &actions.PLONKY2{	
+				ImageID:       imageID,
+				ProofValType:  uint64(valType),
+				TimeOutBlocks: uint64(timeOutBlocks),
+			}
+		}	else if verifyType == 6 {
+			
 		} else {
 			return ErrInvalidVerificationType
-		}
+		} 
 		cont, err := handler.Root().PromptContinue()
 		if !cont || err != nil {
 			return err

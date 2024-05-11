@@ -29,6 +29,7 @@ func init() {
 		consts.ActionRegistry.Register((&actions.RiscZero{}).GetTypeID(), actions.UnmarshalRiscZero, false),
 		consts.ActionRegistry.Register((&actions.Miden{}).GetTypeID(), actions.UnmarshalMiden, false),
 		consts.ActionRegistry.Register((&actions.Jolt{}).GetTypeID(), actions.UnmarshalJolt, false),
+		consts.ActionRegistry.Register((&actions.PLONKY2{}).GetTypeID(), actions.UnmarshalPLONKY2, false),
 		consts.ActionRegistry.Register((&actions.ValidatorVote{}).GetTypeID(), actions.UnmarshalValidatorVote, false),
 		// consts.ActionRegistry.Register((&actions.Gnark{}).GetTypeID(), actions.UnmarshalGnark, false),
 		// When registering new auth, ALWAYS make sure to append at the end.
