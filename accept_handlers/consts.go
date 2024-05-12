@@ -9,3 +9,5 @@ const (
 )
 
 const elfValType = 1
+const commonDataValType = 2
+const verifierDataValType = 3

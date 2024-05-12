@@ -11,9 +11,10 @@ import (
 )
 
 type Plonky2RequestArgs struct {
-	TxID          string `json:"tx_id"`
-	ELFFilePath   string `json:"elf_file_path"`
-	ProofFilePath string `json:"proof_file_path"`
+	TxID                 string `json:"tx_id"`
+	ProofFilePath        string `json:"proof_file_path"`
+	CommonDataFilePath   string `json:"common_data_file_path"`
+	VerifierDataFilePath string `json:"verifier_data_file_path"`
 }
 
 type Plonky2ReplyArgs struct {
@@ -27,17 +28,20 @@ func HandlePlonky2(
 	baseDir string,
 	endPointRequester *requester.EndpointRequester,
 ) error { //@todo send the hashes stored for every proofvaltype to rust server
-	elfKey := storage.DeployKey(imageID, elfValType)
+	commonDataKey := storage.DeployKey(imageID, commonDataValType)
+	verifierDataValType := storage.DeployKey(imageID, verifierDataValType)
 	proofKey := storage.DeployKey(imageID, proofValType)
-	elfFilePath := baseDir + "/" + elfKey
+	commonDataFilePath := baseDir + "/" + commonDataKey
+	verifierDataFilePath := baseDir + "/" + verifierDataValType
 	proofFilePath := baseDir + "/" + proofKey
 	// call the plonky2 endpoint with elfFilePath, proofFilePath, txID
 	cli := endPointRequester.Cli
 	uri := endPointRequester.Uri + requester.PLONKY2ENDPOINT
 	args := Plonky2RequestArgs{
-		TxID:          txID.String(),
-		ELFFilePath:   elfFilePath,
-		ProofFilePath: proofFilePath,
+		TxID:                 txID.String(),
+		CommonDataFilePath:   commonDataFilePath,
+		VerifierDataFilePath: verifierDataFilePath,
+		ProofFilePath:        proofFilePath,
 	}
 
 	jsonData, err := json.Marshal(args)
