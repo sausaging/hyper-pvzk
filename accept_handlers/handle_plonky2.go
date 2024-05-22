@@ -29,10 +29,10 @@ func HandlePlonky2(
 	endPointRequester *requester.EndpointRequester,
 ) error { //@todo send the hashes stored for every proofvaltype to rust server
 	commonDataKey := storage.DeployKey(imageID, commonDataValType)
-	verifierDataValType := storage.DeployKey(imageID, verifierDataValType)
+	verifierDataKey := storage.DeployKey(imageID, verifierDataValType)
 	proofKey := storage.DeployKey(imageID, proofValType)
 	commonDataFilePath := baseDir + "/" + commonDataKey
-	verifierDataFilePath := baseDir + "/" + verifierDataValType
+	verifierDataFilePath := baseDir + "/" + verifierDataKey
 	proofFilePath := baseDir + "/" + proofKey
 	// call the plonky2 endpoint with elfFilePath, proofFilePath, txID
 	cli := endPointRequester.Cli
