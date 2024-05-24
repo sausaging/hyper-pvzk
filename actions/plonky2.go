@@ -51,6 +51,8 @@ func (s PLONKY2) Size() int {
 func (s *PLONKY2) Marshal(p *codec.Packer) {
 	p.PackID(s.ImageID)
 	p.PackUint64(s.ProofValType)
+	p.PackUint64(s.CommonDataValType)
+	p.PackUint64(s.VerifierDataValType)
 	p.PackUint64(s.TimeOutBlocks)
 }
 
@@ -58,6 +60,8 @@ func UnmarshalPLONKY2(p *codec.Packer, _ *warp.Message) (chain.Action, error) {
 	var PLONKY2 PLONKY2
 	p.UnpackID(true, &PLONKY2.ImageID)
 	PLONKY2.ProofValType = p.UnpackUint64(true)
+	PLONKY2.CommonDataValType = p.UnpackUint64(true)
+	PLONKY2.VerifierDataValType = p.UnpackUint64(true)
 	PLONKY2.TimeOutBlocks = p.UnpackUint64(true)
 	return &PLONKY2, nil
 }
