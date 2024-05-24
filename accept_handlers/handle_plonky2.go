@@ -25,6 +25,8 @@ func HandlePlonky2(
 	txID ids.ID,
 	imageID ids.ID,
 	proofValType uint16,
+	commonDataValType uint16,
+	verifierDataValType uint16,
 	baseDir string,
 	endPointRequester *requester.EndpointRequester,
 ) error { //@todo send the hashes stored for every proofvaltype to rust server

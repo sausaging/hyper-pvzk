@@ -195,7 +195,7 @@ func (c *Controller) Accepted(ctx context.Context, blk *chain.StatelessBlock) er
 		case *actions.PLONKY2:
 			plonky2 := tx.Action.(*actions.PLONKY2)
 			c.trustless.ListenActions(tx.ID(), plonky2.TimeOutBlocks)
-			if err := handle.HandlePlonky2(tx.ID(), plonky2.ImageID, uint16(plonky2.ProofValType), c.fileDB.BaseDir(), c.config.Client); err != nil {
+			if err := handle.HandlePlonky2(tx.ID(), plonky2.ImageID, uint16(plonky2.ProofValType), uint16(plonky2.CommonDataValType), uint16(plonky2.VerifierDataValType), c.fileDB.BaseDir(), c.config.Client); err != nil {
 				c.inner.Logger().Info("error handling Plonky2", zap.Error(err))
 			}
 			// case *actions.ValResultVote:

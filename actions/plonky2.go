@@ -17,9 +17,11 @@ import (
 var _ chain.Action = (*PLONKY2)(nil)
 
 type PLONKY2 struct {
-	ImageID       ids.ID `json:"image_id"`
-	ProofValType  uint64 `json:"proof_val_type"`
-	TimeOutBlocks uint64 `json:"time_out_blocks"`
+	ImageID             ids.ID `json:"image_id"`
+	ProofValType        uint64 `json:"proof_val_type"`
+	CommonDataValType   uint64 `json:"common_data_val_type"`
+	VerifierDataValType uint64 `json:"verifier_data_val_type"`
+	TimeOutBlocks       uint64 `json:"time_out_blocks"`
 }
 
 func (*PLONKY2) GetTypeID() uint8 {

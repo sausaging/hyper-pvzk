@@ -183,23 +183,33 @@ var verifyCmd = &cobra.Command{
 				RiscZeroImageID: riscZeroImageID,
 				TimeOutBlocks:   uint64(timeOutBlocks),
 			}
-		}  else if verifyType == 4 {
+		} else if verifyType == 4 {
 			action = &actions.Jolt{
 				ImageID:       imageID,
 				ProofValType:  uint64(valType),
 				TimeOutBlocks: uint64(timeOutBlocks),
 			}
 		} else if verifyType == 5 {
-			action = &actions.PLONKY2{	
-				ImageID:       imageID,
-				ProofValType:  uint64(valType),
-				TimeOutBlocks: uint64(timeOutBlocks),
+			commonDataValType, err := handler.Root().PromptInt("common data val type", int(consts.MaxUint16))
+			if err != nil {
+				return err
 			}
-		}	else if verifyType == 6 {
-			
+			verifierDataValType, err := handler.Root().PromptInt("verifier data val type", int(consts.MaxUint16))
+			if err != nil {
+				return err
+			}
+			action = &actions.PLONKY2{
+				ImageID:             imageID,
+				ProofValType:        uint64(valType),
+				CommonDataValType:   uint64(commonDataValType),
+				VerifierDataValType: uint64(verifierDataValType),
+				TimeOutBlocks:       uint64(timeOutBlocks),
+			}
+		} else if verifyType == 6 {
+
 		} else {
 			return ErrInvalidVerificationType
-		} 
+		}
 		cont, err := handler.Root().PromptContinue()
 		if !cont || err != nil {
 			return err
