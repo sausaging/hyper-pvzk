@@ -13,3 +13,4 @@ const RiscZeroComputeUnits = 8000
 const MidenComputeUnits = 6000
 const GnarkComputeUnits = 8000
 const JoltComputeUnits = 20_000
+const PLONKY2ComputeUnits = 8000
